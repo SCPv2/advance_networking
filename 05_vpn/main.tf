@@ -183,34 +183,6 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm1" {
 }
 
 # VM for NFS (nfsvm)
-#resource "samsungcloudplatformv2_virtualserver_server" "vm2" {
-#  name           = var.vm_nfsvm.name
-#  keypair_name   = data.samsungcloudplatformv2_virtualserver_keypair.kp.name
-#  server_type_id = var.server_type_id
-#  state ="ACTIVE"
-#
-#  boot_volume = {
-#    size                  = var.boot_volume_windows.size
-#    type                  = var.boot_volume_windows.type
-#    delete_on_termination = var.boot_volume_windows.delete_on_termination
-#  }
-#
-#  image_id = local.rocky_image_id_first
-#
-#  networks = {
-#    nic0 = {
-#      subnet_id    = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].id
-#    }
-#  }
-#
-#  security_groups = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
-#
-#  depends_on = [
-#    samsungcloudplatformv2_vpc_subnet.subnets,
-#    samsungcloudplatformv2_security_group_security_group.sg
-#  ]
-#}
-
 resource "samsungcloudplatformv2_virtualserver_server" "vm2" {
   name           = var.vm_nfsvm.name
   keypair_name   = data.samsungcloudplatformv2_virtualserver_keypair.kp.name
