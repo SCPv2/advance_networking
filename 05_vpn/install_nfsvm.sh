@@ -13,8 +13,9 @@ sudo dnf upgrade -y
 sudo dnf install -y epel-release
 sudo dnf install -y wget curl git vim nano htop net-tools bind-utils
 echo "200 nic2" | sudo tee -a /etc/iproute2/rt_tables
-sudo ip route add default via 10.0.1.1 dev eth1 table nic2
-sudo ip rule add from 10.0.1.10/32 lookup nic2 priority 100
+# Auto-Scaling에서 생성할 경우 아래 두 라인 삭제 또는 마스킹
+sudo ip route add default via 10.1.1.1 dev eth1 table nic2             # web: 10.1.1.1, app: 10.1.2.1 
+sudo ip rule add from 10.1.1.10/32 lookup nic2 priority 100            # web: 10.1.1.10/32, app: 10.1.2.20/32
 
 mkdir -p "${DEST}"
 # 필요 유틸
