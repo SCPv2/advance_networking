@@ -41,7 +41,7 @@ variable "vpcs" {
   }))
   default = [
     {
-      name        = "VPCa"
+      name        = "VPC1"
       cidr        = "10.1.0.0/16"
       description = "Primary VPC"
     }
@@ -65,7 +65,7 @@ variable "subnets" {
       name        = "Subnet11"
       cidr        = "10.1.1.0/24"
       type        = "GENERAL"
-      vpc_name    = "VPCa"
+      vpc_name    = "VPC1"
       description = "Subnet for Creative Energy"
     }
   ]
