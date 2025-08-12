@@ -26,7 +26,7 @@ variable "subnets" {
   type = list(object({
     name        = string
     cidr        = string
-    type        = string   # GENERAL | LOCAL | VPC_ENDPOINT
+    type        = string                                  # GENERAL | LOCAL | VPC_ENDPOINT
     vpc_name    = string   
     description = string
   }))
@@ -47,13 +47,7 @@ variable "subnets" {
 variable "keypair_name" {
   type        = string
   description = "Key Pair to access VM"
-  default     = "stkey"
-}
-
-variable "keypair_output_path" {
-  type        = string
-  description = "Local Path for New Key Pair"
-  default     = "./mykey.pem"                               # 사용자가 미리 생성한 Key Pair 이름 적용
+  default     = "stkey"                                 # 기존 Key Pair 이름으로 변경
 }
 
 ########################################################
@@ -68,20 +62,6 @@ variable "security_group_web" {
     type        = string
     default     = "nfsvmSG"
   }
-
-########################################################
-# port 변수 정의
-########################################################  
-variable "port_names" {
-  type = object({
-    bastion   = string
-    nfsvm = string
-  })
-  default = {
-    bastion   = "bastion-port"
-    nfsvm     = "nfsvm-port"
-  }
-}
 
 ########################################################
 # Virtual Server Standard Image 변수 정의
