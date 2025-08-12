@@ -1,3 +1,33 @@
+########################################################
+# 사용자 입력 항목
+########################################################
+variable "keypair_name" {
+  type        = string
+  description = "Key Pair to access VM"
+  default     = "mykey"                                 # 기존 Key Pair 이름으로 변경
+}
+
+variable "user_public_ip" {
+  type        = string
+  description = "Public IP address of user PC"
+  default     = "00.00.00.00"                           # 사용자 PC의 Public IP 주소 입력
+}
+
+########################################################
+# VM Private IP 주소
+########################################################
+variable "bastion_ip" {
+  type        = string
+  description = "Private IP address of Bastion Host"
+  default     = "10.1.1.10"                           
+}
+
+variable "nfsvm_ip" {
+  type        = string
+  description = "Private IP address of VM for NFS"
+  default     = "10.1.1.20"                           
+}
+
 
 ########################################################
 # VPC 변수 정의
@@ -11,7 +41,7 @@ variable "vpcs" {
   }))
   default = [
     {
-      name        = "VPC1"
+      name        = "VPCa"
       cidr        = "10.1.0.0/16"
       description = "Primary VPC"
     }
@@ -35,19 +65,25 @@ variable "subnets" {
       name        = "Subnet11"
       cidr        = "10.1.1.0/24"
       type        = "GENERAL"
-      vpc_name    = "VPC1"
+      vpc_name    = "VPCa"
       description = "Subnet for Creative Energy"
     }
   ]
 }
 
 ########################################################
-# Key Pair 변수 정의
+# Public IP 변수 정의
 ########################################################
-variable "keypair_name" {
-  type        = string
-  description = "Key Pair to access VM"
-  default     = "stkey"                                 # 기존 Key Pair 이름으로 변경
+
+variable "public_ips" {
+  type = list(object({
+    name        = string
+    description = string
+  }))
+  default = [
+    { name = "PIP1", description = "Public IP for VM" },
+    { name = "PIP2", description = "Public IP for VM" }
+  ]
 }
 
 ########################################################
