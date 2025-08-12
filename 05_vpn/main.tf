@@ -63,6 +63,10 @@ data "samsungcloudplatformv2_virtualserver_keypair" "kp" {
 ############################
 resource "samsungcloudplatformv2_vpc_publicip" "pip1" {
   type        = "IGW"
+
+  depends_on = [
+    samsungcloudplatformv2_vpc_subnet.subnets
+  ]
 }
 
 ############################
@@ -82,24 +86,30 @@ resource "samsungcloudplatformv2_security_group_security_group" "nfsvm_sg" {
 # Ports
 ############################
 resource "samsungcloudplatformv2_vpc_port" "bastion_port" {
-  name            = var.port_names.bastion
-  subnet_id       = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].id
+  name              = "bastionport"
+  description       = "bastion port"
+  subnet_id         = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].id
+  fixed_ip_address  = "10.1.1.10"
+
   security_groups = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
 
   depends_on = [
     samsungcloudplatformv2_security_group_security_group.bastion_sg,
-    samsungcloudplatformv2_vpc_subnet,subnets
+    samsungcloudplatformv2_vpc_subnet.subnets
   ]
 }
 
 resource "samsungcloudplatformv2_vpc_port" "nfsvm_port" {
-  name            = var.port_names.nfsvm
-  subnet_id       = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].id
-  security_groups = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
+  name              = "nfsvmport"
+  description       = "nfsvm port"
+  subnet_id         = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].id
+  fixed_ip_address  = "10.1.1.20"
+
+  security_groups = [samsungcloudplatformv2_security_group_security_group.nfsvm_sg.id]
 
   depends_on = [
-    samsungcloudplatformv2_security_group_security_group.nfsvm_sg,
-    samsungcloudplatformv2_vpc_subnet,subnets
+    samsungcloudplatformv2_security_group_security_group.bastion_sg,
+    samsungcloudplatformv2_vpc_subnet.subnets
   ]
 }
 
@@ -123,7 +133,7 @@ data "samsungcloudplatformv2_virtualserver_images" "windows" {
   }
 }
 
-# Rocky
+# Rocky 이미지 조회
 data "samsungcloudplatformv2_virtualserver_images" "rocky" {
   os_distro = var.image_rocky_os_distro
   status    = "active"
@@ -140,6 +150,7 @@ data "samsungcloudplatformv2_virtualserver_images" "rocky" {
   }
 }
 
+# 이미지 Local 변수 지정
 locals {
   windows_ids = try(data.samsungcloudplatformv2_virtualserver_images.windows.ids, [])
   rocky_ids   = try(data.samsungcloudplatformv2_virtualserver_images.rocky.ids, [])
@@ -160,9 +171,9 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm1" {
   state ="ACTIVE"
 
   boot_volume = {
-    size                  = var.boot_volume_bastion.size
-    type                  = var.boot_volume_bastion.type
-    delete_on_termination = var.boot_volume_bastion.delete_on_termination
+    size                  = var.boot_volume_windows.size
+    type                  = var.boot_volume_windows.type
+    delete_on_termination = var.boot_volume_windows.delete_on_termination
   }
 
   image_id = local.windows_image_id_first
@@ -170,15 +181,17 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm1" {
   networks = {
     nic0 = {
       public_ip_id = samsungcloudplatformv2_vpc_publicip.pip1.id,
-      port_id      = samsungcloudplatformv2_vpc_port.bastion_port.id,
-      subnet_id    = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].id
+      port_id      = samsungcloudplatformv2_vpc_port.bastion_port.id
     }
   }
+
+  security_groups = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
 
   depends_on = [
     samsungcloudplatformv2_vpc_subnet.subnets,
     samsungcloudplatformv2_security_group_security_group.bastion_sg,
-    samsungcloudplatformv2_vpc_publicip.pip1
+    samsungcloudplatformv2_vpc_publicip.pip1,
+    samsungcloudplatformv2_vpc_port.bastion_port
   ]
 }
 
@@ -198,14 +211,16 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm2" {
   image_id = local.rocky_image_id_first
 
   networks = {
-    interface_1 : {
-      subnet_id : samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].id,
+    nic0 = {
       port_id = samsungcloudplatformv2_vpc_port.nfsvm_port.id
     }
   }
+  
+  security_groups = [samsungcloudplatformv2_security_group_security_group.nfsvm_sg.id] 
 
   depends_on = [
     samsungcloudplatformv2_vpc_subnet.subnets,
-    samsungcloudplatformv2_security_group_security_group.nfsvm_sg
+    samsungcloudplatformv2_security_group_security_group.nfsvm_sg,
+    samsungcloudplatformv2_vpc_port.nfsvm_port
   ]
 }
