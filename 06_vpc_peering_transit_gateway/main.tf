@@ -439,7 +439,7 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm3" {
 
   depends_on = [
     samsungcloudplatformv2_vpc_subnet.subnets,
-    samsungcloudplatformv2_security_group_security_group.secondary_sg,
-    samsungcloudplatformv2_vpc_port.secondary_port
+    samsungcloudplatformv2_security_group_security_group.tertiary_sg,
+    samsungcloudplatformv2_vpc_port.tertiary_port
   ]
 }
