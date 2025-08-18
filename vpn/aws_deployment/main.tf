@@ -17,10 +17,10 @@ terraform {
 }
 
 provider "aws" {
-  access_key = "youneedputaccesskeyhere"
-  secret_key = "youneedputsecretkeyhere"
-  # token    = " "
-  region     = " "
+  access_key = "put_your_aws_access_key"
+  secret_key = "put_your_aws_secret_key"
+  #token    = "unmask_and_put_your_token_if_neccessary"
+  region     = "define_the_region_you_want_to_work_at"
 }
 
 
