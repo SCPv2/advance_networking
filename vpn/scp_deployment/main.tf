@@ -5,7 +5,7 @@ terraform {
   required_providers {
     samsungcloudplatformv2 = {
       version = "1.0.3"
-      source  = "SamsungSDSCloud/samsungcloudplatformv2"
+      source = "SamsungSDSCloud/samsungcloudplatformv2"
     }
   }
   required_version = ">= 1.11"
@@ -370,7 +370,7 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm2" {
   
   security_groups = [samsungcloudplatformv2_security_group_security_group.nfsvm_sg.id] 
 
-  user_data = base64encode(file("${path.module}/userdata_nfsvm.sh"))
+  user_data = base64encode(file("${path.module}/install_nfsvm.sh"))
 
   depends_on = [
     samsungcloudplatformv2_vpc_subnet.subnets,

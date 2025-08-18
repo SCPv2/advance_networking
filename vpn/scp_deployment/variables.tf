@@ -10,7 +10,7 @@ variable "keypair_name" {
 variable "user_public_ip" {
   type        = string
   description = "Public IP address of user PC"
-  default     = "0.0.0.0"                           # 수강자 PC의 Public IP 주소 입력
+  default     = "14.39.93.74"                           # 수강자 PC의 Public IP 주소 입력
 }
 
 ########################################################
@@ -19,13 +19,13 @@ variable "user_public_ip" {
 variable "bastion_ip" {
   type        = string
   description = "Private IP address of Bastion Host"
-  default     = "10.1.1.10"                           
+  default     = "10.1.1.110"                           
 }
 
 variable "nfsvm_ip" {
   type        = string
   description = "Private IP address of VM for NFS"
-  default     = "10.1.1.20"                           
+  default     = "10.1.1.111"                           
 }
 
 
