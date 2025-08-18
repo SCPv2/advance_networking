@@ -20,9 +20,8 @@ provider "aws" {
   access_key = "put_your_aws_access_key"
   secret_key = "put_your_aws_secret_key"
   #token    = "unmask_and_put_your_token_if_neccessary"
-  region     = "define_the_region_you_want_to_work_at"
+  region = "define_the_region_you_want_to_work_at"
 }
-
 
 # 1. 키페어 생성
 resource "tls_private_key" "deployer" {
