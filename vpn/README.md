@@ -2,16 +2,19 @@
 
 ## 선행 실습
 
-### 선택 '[Terraform을 이용한 클라우드 자원 배포]()'
-
+### 선택 '[Terraform을 이용한 클라우드 자원 배포](https://github.com/SCPv2/advance_iac/blob/main/terraform/README.md)'
 
 ## Samsung Cloud Platform 사전 환경 배포
+
 **&#128906; 콘솔에서 Public IP 생성**
-```
+
+```bash
 구분 : Internet Gateway
 ```
+
 **&#128906; Samsung Cloud Platform 변수 입력 (\scp_deployment\variables.tf)**
-```
+
+```hcl
 variable "user_public_ip" {
   type        = string
   description = "Public IP address of user PC"
@@ -20,8 +23,10 @@ variable "user_public_ip" {
 
 }
 ```
+
 **&#128906; Terraform 실행**
-```
+
+```bash
 cd C:\scpv2advance\advance_networking\vpn\scp_deployment
 terraform init
 terraform validate
@@ -29,9 +34,12 @@ terraform plan
 
 terraform apply --auto-approve
 ```
+
 ## AWS 사전 환경 배포
+
 **&#128906; AWS 변수 입력 (\aws_deployment\main.tf)**
-```
+
+```hcl
 provider "aws" {
 ->  access_key = "putyourkey"                 # AWS 사용자 인증키
 ->  secret_key = "putyourkey"
@@ -47,8 +55,10 @@ resource "aws_customer_gateway" "cgw" {
 }
 
 ```
+
 **&#128906; Terraform 실행**
-```
+
+```bash
 cd C:\scpv2advance\advance_networking\vpn\aws_deployment
 terraform init
 terraform validate
@@ -60,8 +70,9 @@ terraform apply --auto-approve
 ## 환경 검토
 
 **&#128906; Samsung Cloud Platform의 환경 검토**
-- VPC CIDR          
-- Subnet CIDR        
+
+- VPC CIDR
+- Subnet CIDR
 - Virtual Server OS, Public IP, Private IP
 - Firewall 규칙
 - Security Group 규칙
@@ -76,19 +87,23 @@ terraform apply --auto-approve
 - Sercurity Group 규칙
 
 &#128906; 배포된 AWS site-to-site VPN 구성 설정 확인
+
 - 공급업체: Fortigate
 - IKE버전: ikev1
 
 ## Samsung Cloud Platform VPN 구성
 
 ### VPN Gateway 생성
-```
+
+```bash
 VPN Gateway명                  : cevpn
 연결 VPC                       : VPC1
 Public IP                     : 앞에서 생성한 Public IP 지정
 ```
+
 ### VPN Tunnel 생성
-```
+
+```bash
 VPN Tunnel명                  : ceawsvpntunnel
 VPN Gateway명                 : cevpn
 Peer VPN GW IP                : AWS 구성 정보 참고
@@ -117,14 +132,17 @@ DPD Probe Interval            : AWS 구성 정보 참고
 ### 통신 제어 규칙 검토 및 추가
 
 ### Firewall
+
 |Deployment|Firewall|Source|Destination|Service|Action|Direction|Description|
 |:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
 |Terraform|IGW|10.1.1.110, 10.1.1.111|0.0.0.0/0|TCP 80, 443|Allow|Outbound|HTTP/HTTPS outbound from vms to Internet|
 |Terraform|IGW|Your Public IP|10.1.1.110|TCP 3389|Allow|Inbound|RDP inbound to bastion|
 |User Add|IGW|10.1.1.110|192.168.200.0/24|TCP 22|Allow|Outbound|SSH outbound to ec2 instance|
 |User Add|IGW|10.1.1.111|192.168.200.0/24|TCP 2049|Allow|Outbound|NFS outbound to Amazon EFS|
+
 ### Security Group
-|Deployment|Security Group|Direction|Target Address<br>Remote SG|Service|Description|
+
+|Deployment|Security Group|Direction|Target Address   Remote SG|Service|Description|
 |:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
 |Terrafom|bastionSG|Inbound|Your Public IP|TCP 3389|RDP inbound to bastion VM|
 |Terrafom|bastionSG|Outbound|0.0.0.0/0|TCP 80|HTTP outbound to Internet|
@@ -147,26 +165,31 @@ DPD Probe Interval            : AWS 구성 정보 참고
 ## VM 연결 및 NFS 마운트
 
 ### Bastion Server 접속
+
 - Bastion Host에 RDP 접속해서 다음 파일을 복사
 
-```
+```bash
 C:\scpv2advance\mykey.ppk 
 C:\scpv2advance\advance_networking\vpn\aws_deployment\awsmykey.pem 
 C:\scpv2advance\advance_networking\vpn\scp_deployment\install_putty.ps1
 ```
+
 - Bastion Host(10.1.1.110)에서 NFSVM(10.1.1.111)에 SSH(22) 접속
 - Bastion Host(10.1.1.110)에서 ec2(192.168.200.X)에 SSH(22) 접속
 - Amazon EFS Mount 정보 확인
 - EC2(192.168.200.X)에서
-```
+
+```bash
 mkdir efs
 sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 192.168.200.x:/ efs   # 실제 마운트 정보는 AWS 콘솔에서 확인
 df -h             # 마운트 확인
 cd efs
 sudo touch welcome!
 ```
+
 - vm111r(10.1.1.111)에서
-```
+
+```bash
 mkdir efs
 sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 192.168.200.x:/ efs   # 실제 마운트 정보는 AWS 콘솔에서 확인
 df -h             # 마운트 확인
