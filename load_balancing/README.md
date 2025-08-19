@@ -69,6 +69,7 @@ terraform apply --auto-approve
 |User Add|bbwebSG|Inbound|bastionSG|TCP 22|SSH inbound from bastion|
 
 ## Load Balancer용 Public IP 예약
+
 - 구분 : Internet Gateway
 
 ## Public Domian Name 확인
@@ -167,15 +168,14 @@ sudo bash bbweb_install_web_server.sh
 |:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
 |Terraform|VPC1 IGW|Your Public IP|10.1.1.110|TCP 3389|Allow|Inbound|RDP inbound to bastion|
 |Terraform|VPC1 IGW|10.1.1.110, 10.1.1.111|0.0.0.0/0|TCP 80, 443|Allow|Outbound|HTTP/HTTPS outbound from vm to Internet|
-|New|VPC1 IGW|Your Public IP|10.1.1.100<br>(Service IP)|TCP 80|Allow|Inbound|클라이언트 → LB 연결|
-|||
+|New|VPC1 IGW|Your Public IP|10.1.1.100(Service IP)|TCP 80|Allow|Inbound|클라이언트 → LB 연결|
+|||||||||
 |Terraform|VPC2 IGW|10.2.1.0/24|0.0.0.0/0|TCP 80, 443|Allow|Outbound|HTTP/HTTPS outbound from vm to Internet|
-|New|VPC2 IGW|Your Public IP|10.2.1.211<br>(bbwebvm211r)|TCP 80|Allow|Inbound|HTTP inbound from your pc to bbweb vm|
-|||
-|New|Load Balancer|Your Public IP|10.1.1.100<br>(Service IP)|TCP 80|Allow|Outbound|클라이언트 → LB 연결|
-|New|Load Balancer|LB Source NAT IP|10.1.1.111(cewebvm111r IP),<br>10.2.1.211(bbwebvm211r IP)|TCP 80|Allow|Inbound|LB → 멤버 연결
-|New|Load Balancer|LB 헬스 체크 IP|10.1.1.111(cewebvm111r IP),<br>10.2.1.211(bbwebvm211r IP)|TCP 80|Allow|Inbound|LB → 멤버 헬스 체크|
-
+|New|VPC2 IGW|Your Public IP|10.2.1.211(bbwebvm211r)|TCP 80|Allow|Inbound|HTTP inbound from your pc to bbweb vm|
+|||||||||
+|New|Load Balancer|Your Public IP|10.1.1.100(Service IP)|TCP 80|Allow|Outbound|클라이언트 → LB 연결|
+|New|Load Balancer|LB Source NAT IP|10.1.1.111(cewebvm111r IP),10.2.1.211(bbwebvm211r IP)|TCP 80|Allow|Inbound|LB → 멤버 연결|
+|New|Load Balancer|LB 헬스 체크 IP|10.1.1.111(cewebvm111r IP),10.2.1.211(bbwebvm211r IP)|TCP 80|Allow|Inbound|LB → 멤버 헬스 체크|
 
 - **Security Group**
 
@@ -199,7 +199,6 @@ sudo bash bbweb_install_web_server.sh
 |New|bbwebSG|Inbound|LB Source NAT IP|TCP 80|HTTP inbound from Load Balancer|
 |New|bbwebSG|Inbound|LB 헬스 체크 IP|TCP 80|Healthcheck HTTP inbound from Load Balancer|
 |New|bbwebSG|Inbound|Your Public IP|TCP 80|HTTP inbound from your pc to bbweb vm|
-
 
 ## bbwebvm211r(10.2.1.1) 서버에서 테스트
 
