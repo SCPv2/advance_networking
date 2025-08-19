@@ -2,9 +2,15 @@
 
 ## 선행 실습
 
+### 선택 '[과정 소개](https://github.com/SCPv2/ce_advance_introduction/blob/main/README.md)'
+
+- Key Pair, 인증키, DNS 등 사전 준비
+
 ### 선택 '[Terraform을 이용한 클라우드 자원 배포](https://github.com/SCPv2/advance_iac/blob/main/terraform/README.md)'
 
-## Samsung Cloud Platform 사전 환경 배포
+- Samsung Cloud Platform v2 기반 Terraform 학습
+
+## Samsung Cloud Platform 실습 환경 배포
 
 **&#128906; 콘솔에서 Public IP 생성**
 
@@ -19,12 +25,12 @@ variable "user_public_ip" {
   type        = string
   description = "Public IP address of user PC"
 
-  default     = "0.0.0.0"                       # 수강자 PC의 Public IP 주소 입력
+  default     = "x.x.x.x"                             🠈 수강자 PC의 Public IP 주소 입력
 
 }
 ```
 
-**&#128906; Terraform 실행**
+**&#128906; Terraform 자원 배포 템플릿 실행**
 
 ```bash
 cd C:\scpv2advance\advance_networking\vpn\scp_deployment
@@ -35,28 +41,27 @@ terraform plan
 terraform apply --auto-approve
 ```
 
-## AWS 사전 환경 배포
+## AWS 실습 환경 배포
 
 **&#128906; AWS 변수 입력 (\aws_deployment\main.tf)**
 
 ```hcl
 provider "aws" {
-->  access_key = "putyourkey"                 # AWS 사용자 인증키
-->  secret_key = "putyourkey"
-# token        = "unmaskandputyourtokenifany" # 토큰이 필요할 경우 마스크를 해제하고 값 입력
-->  region     = "putyourregion"
+  access_key = "put_your_aws_access_key"                🠈 AWS 사용자 인증키
+  secret_key = "put_your_aws_secret_key"                🠈 AWS 사용자 인증키
+  #token    = "unmask_and_put_your_token_if_neccessary" 🠈 토큰이 필요할 경우 마스크를 해제하고 값 입력
+  region = "define_the_region_you_want_to_work_at"      🠈 자원을 배포할 Region 입력
 }
-
+ 
 resource "aws_customer_gateway" "cgw" {
-  bgp_asn      = 65000
-->  ip_address = "0.0.0.0"                    # 앞서 생성한 Samsung Cloud Platform의 Public IP 주소
-  type         = "ipsec.1"
-  tags         = { Name = "ceVPC-customer-gateway" }
+  bgp_asn    = 65000
+  ip_address = "x.x.x.x"                                🠈 여기에 앞서 생성한 SCP Public IP 주소 입력
+  type       = "ipsec.1"
+  tags       = { Name = "ceVPC-customer-gateway" }
 }
-
 ```
 
-**&#128906; Terraform 실행**
+**&#128906; Terraform 자원 배포 템플릿 실행**
 
 ```bash
 cd C:\scpv2advance\advance_networking\vpn\aws_deployment
@@ -71,6 +76,7 @@ terraform apply --auto-approve
 
 **&#128906; Samsung Cloud Platform의 환경 검토**
 
+- Architectuer Diagram
 - VPC CIDR
 - Subnet CIDR
 - Virtual Server OS, Public IP, Private IP
@@ -86,7 +92,7 @@ terraform apply --auto-approve
 - Subnet Route Table
 - Sercurity Group 규칙
 
-&#128906; 배포된 AWS site-to-site VPN 구성 설정 확인
+**&#128906; 배포된 AWS site-to-site VPN 구성 설정 확인**
 
 - 공급업체: Fortigate
 - IKE버전: ikev1
@@ -95,41 +101,38 @@ terraform apply --auto-approve
 
 ### VPN Gateway 생성
 
-```bash
-VPN Gateway명                  : cevpn
-연결 VPC                       : VPC1
-Public IP                     : 앞에서 생성한 Public IP 지정
-```
+- VPN Gateway명                  : cevpn
+- 연결 VPC                       : VPC1
+- Public IP                     : 앞에서 생성한 Public IP 지정
 
 ### VPN Tunnel 생성
 
-```bash
-VPN Tunnel명                  : ceawsvpntunnel
-VPN Gateway명                 : cevpn
-Peer VPN GW IP                : AWS 구성 정보 참고
-Remote Subnet(CIDR)           : 192.168.200.0/24
-Pre-shared Key                : AWS 구성 정보 참고
+**서비스 정보**  
 
-IKE 설정                       : AWS 구성 정보 참고
-IKE Version                   : AWS 구성 정보 참고
-알고리즘 설정                   : AWS 구성 정보 참고
-Encryption Algorithm          : AWS 구성 정보 참고
-Digest Algorithm              : AWS 구성 정보 참고
-Diffie-Hellman                : AWS 구성 정보 참고
-SA LifeTime                   : AWS 구성 정보 참고
+- VPN Tunnel명                  : ceawsvpntunnel
+- VPN Gateway명                 : cevpn
+- Peer VPN GW IP                : AWS 구성 정보 참고
+- Remote Subnet(CIDR)           : 192.168.200.0/24
+- Pre-shared Key                : AWS 구성 정보 참고  
 
-IPSEC 설정                     : AWS 구성 정보 참고
-알고리즘 설정                   : AWS 구성 정보 참고
-Encryption Algorithm          : AWS 구성 정보 참고
-Digest Algorithm              : AWS 구성 정보 참고
+**IKE 설정**  
 
-Perfect Forward Secrecy(PFS)  : AWS 구성 정보 참고
-Diffie-Hellman                : AWS 구성 정보 참고
-SA LifeTime                   : AWS 구성 정보 참고
-DPD Probe Interval            : AWS 구성 정보 참고
-```
+- IKE Version                   : AWS 구성 정보 참고(기본: IKE v1)
+- Encryption Algorithm          : AWS 구성 정보 참고(기본: aes128)
+- Digest Algorithm              : AWS 구성 정보 참고(기본: sha1)
+- Diffie-Hellman                : AWS 구성 정보 참고(기본: 2)
+- SA LifeTime                   : AWS 구성 정보 참고(기본: 28800)
 
-### 통신 제어 규칙 검토 및 추가
+**IPSEC 설정**  
+
+- IKE Version                   : AWS 구성 정보 참고(기본: IKE v1)
+- Encryption Algorithm          : AWS 구성 정보 참고(기본: aes128)
+- Perfect Forward Secrecy(PFS)  : AWS 구성 정보 참고(기본: 사용)
+- Diffie-Hellman                : AWS 구성 정보 참고(기본: 2)
+- SA LifeTime                   : AWS 구성 정보 참고(기본: 3600)
+- DPD Probe Interval            : AWS 구성 정보 참고(기본: 30)
+
+### 통신 제어 규칙 검토 및 새규칙 추가
 
 ### Firewall
 
@@ -166,7 +169,7 @@ DPD Probe Interval            : AWS 구성 정보 참고
 
 ### Bastion Server 접속
 
-- Bastion Host에 RDP 접속해서 다음 파일을 복사
+- 로컬 PC에서 Bastion Host로 다음 파일을 복사
 
 ```bash
 C:\scpv2advance\mykey.ppk 
@@ -177,7 +180,8 @@ C:\scpv2advance\advance_networking\vpn\scp_deployment\install_putty.ps1
 - Bastion Host(10.1.1.110)에서 NFSVM(10.1.1.111)에 SSH(22) 접속
 - Bastion Host(10.1.1.110)에서 ec2(192.168.200.X)에 SSH(22) 접속
 - Amazon EFS Mount 정보 확인
-- EC2(192.168.200.X)에서
+
+- EC2(192.168.200.X)에서 다음 명령 실행
 
 ```bash
 mkdir efs
@@ -187,7 +191,7 @@ cd efs
 sudo touch welcome!
 ```
 
-- vm111r(10.1.1.111)에서
+- vm111r(10.1.1.111)에서 다음 명령 실행
 
 ```bash
 mkdir efs
@@ -196,4 +200,32 @@ df -h             # 마운트 확인
 cd efs
 ls
 sudo touch Thans_for_warm_welcome!
+```
+
+## 자원 삭제
+
+**&#128906; Samsung Cloud Platform 자원 삭제**
+
+- VPN Tunnel삭제
+- VPN Gateway 삭제
+- 새로 작성한 Firewall 규칙 삭제
+
+|Deployment|Firewall|Source|Destination|Service|Action|Direction|Description|
+|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
+|User Add|IGW|10.1.1.110|192.168.200.0/24|TCP 22|Allow|Outbound|SSH outbound to ec2 instance|
+|User Add|IGW|10.1.1.111|192.168.200.0/24|TCP 2049|Allow|Outbound|NFS outbound to Amazon EFS|
+
+- 새로 작성한 Public IP 삭제
+
+```bash
+cd C:\scpv2advance\advance_networking\vpn\scp_deployment
+terraform destroy --auto-approve
+```
+
+**&#128906; AWS 자원 삭제**
+
+```bash
+cd C:\scpv2advance\advance_networking\vpn\aws_deployment
+terraform destroy --auto-approve
+
 ```

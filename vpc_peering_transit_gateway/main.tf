@@ -97,7 +97,9 @@ data "samsungcloudplatformv2_firewall_firewalls" "igw_fws" {
 }
 
 resource "samsungcloudplatformv2_firewall_firewall_rule" "vm_web_out_fw" {
-  firewall_id = data.samsungcloudplatformv2_firewall_firewalls.igw_fws.ids[0]
+  for_each   = toset(data.samsungcloudplatformv2_firewall_firewalls.igw_fws.ids)
+
+  firewall_id = each.value
   firewall_rule_create = {
     action              = "ALLOW"
     direction           = "OUTBOUND"
@@ -109,12 +111,12 @@ resource "samsungcloudplatformv2_firewall_firewall_rule" "vm_web_out_fw" {
       { service_type = "TCP", service_value = "80" },
       { service_type = "TCP", service_value = "443" }
     ]
-
-    depends_on  = [samsungcloudplatformv2_vpc_internet_gateway.igw]
   }
+
+  depends_on = [samsungcloudplatformv2_vpc_internet_gateway.igw]
 }
 
-resource "samsungcloudplatformv2_firewall_firewall_rule" "primary_rdp_in_fw" {
+resource "samsungcloudplatformv2_firewall_firewall_rule" "primary_rdp_in_fw10" {
   firewall_id = data.samsungcloudplatformv2_firewall_firewalls.igw_fws.ids[0]
   firewall_rule_create = {
     action              = "ALLOW"

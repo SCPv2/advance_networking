@@ -23,7 +23,15 @@ provider "aws" {
   region = "define_the_region_you_want_to_work_at"
 }
 
-# 1. 키페어 생성
+# 1. 고객 게이트웨이 생성 
+resource "aws_customer_gateway" "cgw" {
+  bgp_asn    = 65000
+  ip_address = "x.x.x.x"                             # 여기에 SCP에서 생성한 Public IP 주소(VPN주소)를 입력
+  type       = "ipsec.1"
+  tags       = { Name = "ceVPC-customer-gateway" }
+}
+
+# 2. 키페어 생성
 resource "tls_private_key" "deployer" {
   algorithm = "RSA"
   rsa_bits  = 4096
@@ -39,33 +47,33 @@ resource "local_file" "private_key_pem" {
   filename = "awsmykey.pem"
 }
 
-# 2. ceVPC 생성 (192.168.200.0/24)
+# 3. ceVPC 생성 (192.168.200.0/24)
 resource "aws_vpc" "ce_vpc" {
   cidr_block = "192.168.200.0/24"
   tags       = { Name = "ceVPC" }
 }
 
-# 3. ceSBN 서브넷 생성 (192.168.200.0/28)
+# 4. ceSBN 서브넷 생성 (192.168.200.0/24)
 data "aws_availability_zones" "available" {}
 
 resource "aws_subnet" "ce_sbn" {
   vpc_id            = aws_vpc.ce_vpc.id
-  cidr_block        = "192.168.200.0/28"
+  cidr_block        = "192.168.200.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
   tags              = { Name = "ceSBN" }
 }
 
-# 4. ceSG 보안 그룹 생성 (TCP All from 10.0.0.0/16 and 192.168.200.0/24)
+# 5. ceSG 보안 그룹 생성 (TCP All from 10.1.1.0/24 and 192.168.200.0/24)
 resource "aws_security_group" "ce_sg" {
   name        = "ceSG"
-  description = "Allow inbound TCP all from 10.0.0.0/16 and 192.168.200.0/24"
+  description = "Allow inbound TCP all from 10.1.1.0/24 and 192.168.200.0/24"
   vpc_id      = aws_vpc.ce_vpc.id
 
   ingress {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16", "192.168.200.0/24"]
+    cidr_blocks = ["10.1.1.0/24", "192.168.200.0/24"]
   }
 
   egress {
@@ -78,18 +86,10 @@ resource "aws_security_group" "ce_sg" {
   tags = { Name = "ceSG" }
 }
 
-# 5. VPN Gateway 생성 및 ceVPC에 연결
+# 6. VPN Gateway 생성 및 ceVPC에 연결
 resource "aws_vpn_gateway" "vgw" {
   vpc_id = aws_vpc.ce_vpc.id
   tags   = { Name = "ceVPC-vpn-gateway" }
-}
-
-# 6. 고객 게이트웨이 생성 (IP: 123.41.33.171)
-resource "aws_customer_gateway" "cgw" {
-  bgp_asn    = 65000
-  ip_address = "123.41.33.171"
-  type       = "ipsec.1"
-  tags       = { Name = "ceVPC-customer-gateway" }
 }
 
 # 7. Site-to-Site VPN 연결 (정적 라우트 사용)
@@ -102,10 +102,10 @@ resource "aws_vpn_connection" "site_to_site" {
   tags = { Name = "ceVPC-site-to-site-vpn" }
 }
 
-# 8. 정적 라우트 (원격 네트워크 10.0.0.0/16)
+# 8. 정적 라우트 (원격 네트워크 10.1.1.0/24)
 resource "aws_vpn_connection_route" "site_to_site_route" {
   vpn_connection_id      = aws_vpn_connection.site_to_site.id
-  destination_cidr_block = "10.0.0.0/16"
+  destination_cidr_block = "10.1.1.0/24"
 }
 
 # 9. EFS 파일 시스템 생성 (이 VPC 대상, 이름: ce-efs)
@@ -157,7 +157,7 @@ resource "aws_route_table" "ce_sbn_rt" {
 
 resource "aws_route" "ce_sbn_to_vgw" {
   route_table_id         = aws_route_table.ce_sbn_rt.id
-  destination_cidr_block = "10.0.0.0/16"
+  destination_cidr_block = "10.1.1.0/24"
   gateway_id             = aws_vpn_gateway.vgw.id
 }
 

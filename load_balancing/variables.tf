@@ -10,40 +10,28 @@ variable "keypair_name" {
 variable "user_public_ip" {
   type        = string
   description = "Public IP address of user PC"
-  default     = "0.0.0.0"                           # 수강자 PC의 Public IP 주소 입력
+  default     = "14.39.93.74"                           # 수강자 PC의 Public IP 주소 입력
 }
 
 ########################################################
-# VM Private IP 주소
+# VM Private IP 주소 (3개 VM만)
 ########################################################
 variable "bastion_ip" {
   type        = string
   description = "Private IP address of bastion VM"
-  default     = "10.1.1.100"                           
+  default     = "10.1.1.110"                           
 }
 
 variable "ceweb1_ip" {
   type        = string
   description = "Private IP address of ceweb VM1"
-  default     = "10.1.1.10"                           
-}
-
-variable "ceweb2_ip" {
-  type        = string
-  description = "Private IP address of ceweb VM2"
-  default     = "10.1.1.20"                           
+  default     = "10.1.1.111"                           
 }
 
 variable "bbweb1_ip" {
   type        = string
   description = "Private IP address of bbweb VM1"
-  default     = "10.2.1.10"                           
-}
-
-variable "bbweb2_ip" {
-  type        = string
-  description = "Private IP address of bbweb VM2"
-  default     = "10.2.1.20"                           
+  default     = "10.2.1.211"                           
 }
 
 ########################################################
@@ -158,7 +146,7 @@ variable "image_rocky_scp_os_version" {
 }
 
 ########################################################
-# Virtual Server 변수 정의
+# Virtual Server 변수 정의 (3개 VM만)
 ########################################################
 
 variable "server_type_id" {
@@ -188,17 +176,6 @@ variable "vm_ceweb1" {
   }
 }
 
-variable "vm_ceweb2" {
-  type = object({
-    name = string
-    description = string
-  })
-  default = {
-    name = "cewebvm112r"
-    description = "ceweb VM2"
-  }
-}
-
 variable "vm_bbweb1" {
   type = object({
     name = string
@@ -207,17 +184,6 @@ variable "vm_bbweb1" {
   default = {
     name = "bbwebvm211r"
     description = "bbweb VM1"
-  }
-}
-
-variable "vm_bbweb2" {
-  type = object({
-    name = string
-    description = string
-  })
-  default = {
-    name = "bbwebvm212r"
-    description = "bbweb VM2"
   }
 }
 

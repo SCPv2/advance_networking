@@ -10,7 +10,7 @@ variable "keypair_name" {
 variable "user_public_ip" {
   type        = string
   description = "Public IP address of user PC"
-  default     = "0.0.0.0"                           # 수강자 PC의 Public IP 주소 입력
+  default     = "x.x.x.x"                               # 수강자 PC의 Public IP 주소 입력
 }
 
 ########################################################
@@ -19,19 +19,19 @@ variable "user_public_ip" {
 variable "primary_ip" {
   type        = string
   description = "Private IP address of Primary VM"
-  default     = "10.1.1.10"                           
+  default     = "10.1.1.110"                           
 }
 
 variable "secondary_ip" {
   type        = string
   description = "Private IP address of Secondary VM"
-  default     = "10.2.1.10"                           
+  default     = "10.2.1.211"                           
 }
 
 variable "tertiary_ip" {
   type        = string
   description = "Private IP address of Tertiary VM"
-  default     = "10.3.1.10"                           
+  default     = "10.3.1.31"                           
 }
 
 ########################################################
