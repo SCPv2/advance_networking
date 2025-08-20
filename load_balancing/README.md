@@ -1,4 +1,4 @@
-# VPC Peering과 Transit Gateway 구현
+# 다중 VPC 간 Load Balancing 구성
 
 ## 선행 실습
 
