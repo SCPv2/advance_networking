@@ -112,17 +112,17 @@ terraform apply --auto-approve
 - 연결 VPC 관리  : VPC1, VPC2, VPC3  
 - 규칙 :
 
-|연결 VPC명|목적지|목적지 IP 대역|
-|-----|-----|-----|
-|VPC1|TGW|10.2.1.0/24|  
-|VPC1|TGW|10.3.1.0/24|  
-|VPC1|VPC|10.1.1.0/24|  
-|VPC2|TGW|10.1.1.0/24|  
-|VPC2|TGW|10.3.1.0/24|  
-|VPC2|VPC|10.2.1.0/24|  
-|VPC3|TGW|10.1.1.0/24|  
-|VPC3|TGW|10.2.1.0/24|  
-|VPC3|VPC|10.3.1.0/24|
+|연결 VPC명|출발지|목적지|목적지 IP 대역|
+|-----|-----|-----|-----|
+|VPC1|VPC|TGW|10.2.1.0/24|  
+|VPC1|VPC|TGW|10.3.1.0/24|  
+|VPC1|VPC|TGW||10.1.1.0/24|  
+|VPC2|VPC|TGW|10.1.1.0/24|  
+|VPC2|VPC|TGW|10.3.1.0/24|  
+|VPC2|VPC|TGW|10.2.1.0/24|  
+|VPC3|VPC|TGW|10.1.1.0/24|  
+|VPC3|VPC|TGW|10.2.1.0/24|  
+|VPC3|VPC|TGW|10.3.1.0/24|
 
 ### Transit Gateway 연결 테스트
 
