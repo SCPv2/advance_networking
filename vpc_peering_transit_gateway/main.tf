@@ -91,13 +91,14 @@ resource "samsungcloudplatformv2_security_group_security_group" "tertiary_sg" {
 # 기본 통신 규칙 (Firewall)
 ########################################################
 data "samsungcloudplatformv2_firewall_firewalls" "igw_fws" {
-  name     = "FW_IGW_VPC1"
+  for_each = samsungcloudplatformv2_vpc_internet_gateway.igw
+  name     = "FW_IGW_${each.key}"
 
-  depends_on  = [samsungcloudplatformv2_vpc_internet_gateway.igw]
+  depends_on = [samsungcloudplatformv2_vpc_internet_gateway.igw]
 }
 
 resource "samsungcloudplatformv2_firewall_firewall_rule" "vm_web_out_fw" {
-  for_each   = toset(data.samsungcloudplatformv2_firewall_firewalls.igw_fws.ids)
+  for_each = { for k, v in data.samsungcloudplatformv2_firewall_firewalls.igw_fws : k => v.ids[0] }
 
   firewall_id = each.value
   firewall_rule_create = {
@@ -116,21 +117,23 @@ resource "samsungcloudplatformv2_firewall_firewall_rule" "vm_web_out_fw" {
   depends_on = [samsungcloudplatformv2_vpc_internet_gateway.igw]
 }
 
-resource "samsungcloudplatformv2_firewall_firewall_rule" "primary_rdp_in_fw10" {
-  firewall_id = data.samsungcloudplatformv2_firewall_firewalls.igw_fws.ids[0]
+resource "samsungcloudplatformv2_firewall_firewall_rule" "primary_rdp_in_fw" {
+  for_each = { for k, v in data.samsungcloudplatformv2_firewall_firewalls.igw_fws : k => v if k == "VPC1" }
+
+  firewall_id = each.value.ids[0]
   firewall_rule_create = {
     action              = "ALLOW"
     direction           = "INBOUND"
     status              = "ENABLE"
-    source_address      = [var.user_public_ip]
-    destination_address = [var.primary_ip]
+    source_address      = ["${var.user_public_ip}/32"]
+    destination_address = ["${var.primary_ip}/32"]
     description         = "RDP inbound to primary"
     service = [
       { service_type = "TCP", service_value = "3389" }
     ]
-
-    depends_on  = [samsungcloudplatformv2_firewall_firewall_rule.vm_web_out_fw]
   }
+
+  depends_on = [samsungcloudplatformv2_firewall_firewall_rule.vm_web_out_fw]
 }
 
 ########################################################
@@ -144,9 +147,9 @@ resource "samsungcloudplatformv2_security_group_security_group_rule" "primary_RD
   port_range_min    = 3389
   port_range_max    = 3389
   description       = "RDP inbound to Primary VM"
-  remote_ip_prefix  = var.user_public_ip
+  remote_ip_prefix  = "${var.user_public_ip}/32"
 
-  depends_on  = [samsungcloudplatformv2_security_group_security_group.primary_sg]
+  depends_on = [samsungcloudplatformv2_security_group_security_group.primary_sg]
 }
 
 resource "samsungcloudplatformv2_security_group_security_group_rule" "primary_http_out_sg" {
@@ -172,7 +175,7 @@ resource "samsungcloudplatformv2_security_group_security_group_rule" "primary_ht
   description       = "HTTPS outbound to Internet"
   remote_ip_prefix  = "0.0.0.0/0"
 
-  depends_on  = [samsungcloudplatformv2_security_group_security_group_rule.primary_http_out_sg]
+  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.primary_http_out_sg]
 }
 
 resource "samsungcloudplatformv2_security_group_security_group_rule" "secondary_http_out_sg" {
@@ -198,7 +201,7 @@ resource "samsungcloudplatformv2_security_group_security_group_rule" "secondary_
   description       = "HTTPS outbound to Internet"
   remote_ip_prefix  = "0.0.0.0/0"
 
-  depends_on  = [samsungcloudplatformv2_security_group_security_group_rule.secondary_http_out_sg]
+  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.secondary_http_out_sg]
 }
 
 resource "samsungcloudplatformv2_security_group_security_group_rule" "tertiary_http_out_sg" {
@@ -224,7 +227,7 @@ resource "samsungcloudplatformv2_security_group_security_group_rule" "tertiary_h
   description       = "HTTPS outbound to Internet"
   remote_ip_prefix  = "0.0.0.0/0"
 
-  depends_on  = [samsungcloudplatformv2_security_group_security_group_rule.tertiary_http_out_sg]
+  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.tertiary_http_out_sg]
 }
 
 ########################################################
@@ -409,6 +412,7 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm2" {
 
   depends_on = [
     samsungcloudplatformv2_vpc_subnet.subnets,
+    samsungcloudplatformv2_vpc_publicip.publicips,
     samsungcloudplatformv2_security_group_security_group.secondary_sg,
     samsungcloudplatformv2_vpc_port.secondary_port
   ]
@@ -441,6 +445,7 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm3" {
 
   depends_on = [
     samsungcloudplatformv2_vpc_subnet.subnets,
+    samsungcloudplatformv2_vpc_publicip.publicips,
     samsungcloudplatformv2_security_group_security_group.tertiary_sg,
     samsungcloudplatformv2_vpc_port.tertiary_port
   ]
