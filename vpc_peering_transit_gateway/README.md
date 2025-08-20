@@ -4,7 +4,7 @@
 
 ### 선택 '[과정 소개](https://github.com/SCPv2/ce_advance_introduction/blob/main/README.md)'
 
-- Key Pair, 인증키, DNS 등 사전 준비
+- Key Pair, 인증키 사전 준비
 
 ### 선택 '[Terraform을 이용한 클라우드 자원 배포](https://github.com/SCPv2/advance_iac/blob/main/terraform/README.md)'
 
@@ -112,18 +112,17 @@ terraform apply --auto-approve
 - 연결 VPC 관리  : VPC1, VPC2, VPC3  
 - 규칙 :
 
-|연결 VPC명|목적지|목적지 IP 대역|
-|-----|-----|-----|
-|VPC1|TGW|10.2.1.0/24|  
-|VPC1|TGW|10.3.1.0/24|  
-|VPC1|VPC|10.1.1.0/24|  
-|VPC2|TGW|10.1.1.0/24|  
-|VPC2|TGW|10.3.1.0/24|  
-|VPC2|VPC|10.2.1.0/24|  
-
-|VPC3|TGW|10.1.1.0/24|  
-|VPC3|TGW|10.2.1.0/24|  
-|VPC3|VPC|10.3.1.0/24|
+|연결 VPC명|출발지|목적지|목적지 IP 대역|
+|-----|-----|-----|-----|
+|VPC1|VPC|TGW|10.2.1.0/24|  
+|VPC1|VPC|TGW|10.3.1.0/24|  
+|VPC1|TGW|VPC|10.1.1.0/24|  
+|VPC2|VPC|TGW|10.1.1.0/24|  
+|VPC2|VPC|TGW|10.3.1.0/24|  
+|VPC2|TGW|VPC|10.2.1.0/24|  
+|VPC3|VPC|TGW|10.1.1.0/24|  
+|VPC3|VPC|TGW|10.2.1.0/24|  
+|VPC3|TGW|VPC|10.3.1.0/24|
 
 ### Transit Gateway 연결 테스트
 
