@@ -4,7 +4,7 @@
 
 ### 선택 '[과정 소개](https://github.com/SCPv2/ce_advance_introduction/blob/main/README.md)'
 
-- Key Pair, 인증키, DNS 등 사전 준비
+- Key Pair, 인증키 사전 준비
 
 ### 선택 '[Terraform을 이용한 클라우드 자원 배포](https://github.com/SCPv2/advance_iac/blob/main/terraform/README.md)'
 
