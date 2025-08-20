@@ -116,7 +116,7 @@ terraform apply --auto-approve
 |-----|-----|-----|-----|
 |VPC1|VPC|TGW|10.2.1.0/24|  
 |VPC1|VPC|TGW|10.3.1.0/24|  
-|VPC1|VPC|TGW||10.1.1.0/24|  
+|VPC1|VPC|TGW|10.1.1.0/24|  
 |VPC2|VPC|TGW|10.1.1.0/24|  
 |VPC2|VPC|TGW|10.3.1.0/24|  
 |VPC2|VPC|TGW|10.2.1.0/24|  
