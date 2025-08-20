@@ -153,13 +153,6 @@ terraform apply --auto-approve
 |Terrafom|bastionSG|Outbound|nfsvmSG|TCP 22|SSH outbound to nfs vm |
 |User Add|bastionSG|Outbound|192.168.200.0/24|TCP 22|SSH outbound to ec2 instance |
 |||||||
-|Terrafom|webSG|Outbound|0.0.0.0/0|TCP 443|HTTPS outbound to Internet|
-|Terrafom|webSG|Outbound|0.0.0.0/0|TCP 80|HTTP outbound to Internet|
-|User Add|webSG|Inbound|bastionSG|TCP 22|SSH inbound from bastion|
-|User Add|webSG|Inbound|Your Public IP|TCP 80|HTTP inbound from your PC|
-|User Add|webSG|Outbound|appSG|TCP 3000|API outbound to app vm |
-|User Add|webSG|Inbound|bastionSG|TCP 80|HTTP inbound from bastion|
-|||||||
 |Terrafom|nfsvmSG|Outbound|0.0.0.0/0|TCP 80|HTTP outbound to Internet|
 |Terrafom|nfsvmSG|Outbound|0.0.0.0/0|TCP 443|HTTPS outbound to Internet|
 |Terrafom|nfsvmSG|Inbound|bastionSG|TCP 22|SSH inbound from bastion|
