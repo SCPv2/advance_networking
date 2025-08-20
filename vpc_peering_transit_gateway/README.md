@@ -120,7 +120,6 @@ terraform apply --auto-approve
 |VPC2|TGW|10.1.1.0/24|  
 |VPC2|TGW|10.3.1.0/24|  
 |VPC2|VPC|10.2.1.0/24|  
-
 |VPC3|TGW|10.1.1.0/24|  
 |VPC3|TGW|10.2.1.0/24|  
 |VPC3|VPC|10.3.1.0/24|
