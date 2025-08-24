@@ -1,4 +1,16 @@
 ########################################################
+# 공통 태그 설정
+########################################################
+variable "common_tags" {
+  type        = map(string)
+  description = "Common tags to be applied to all resources"
+  default = {
+    name      = "vpn_lab"
+    createdby = "terraform"
+  }
+}
+
+########################################################
 # 수강자 입력 항목
 ########################################################
 variable "keypair_name" {

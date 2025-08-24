@@ -1,16 +1,4 @@
 ########################################################
-# 공통 태그 설정
-########################################################
-variable "common_tags" {
-  type        = map(string)
-  description = "Common tags to be applied to all resources"
-  default = {
-    name      = "vpc_peering_transit_gateway_lab"
-    createdby = "terraform"
-  }
-}
-
-########################################################
 # 수강자 입력 항목
 ########################################################
 variable "keypair_name" {
@@ -22,28 +10,28 @@ variable "keypair_name" {
 variable "user_public_ip" {
   type        = string
   description = "Public IP address of user PC"
-  default     = "x.x.x.x"                               # 수강자 PC의 Public IP 주소 입력
+  default     = "x.x.x.x"                           # 수강자 PC의 Public IP 주소 입력
 }
 
 ########################################################
-# VM Private IP 주소
+# VM Private IP 주소 (3개 VM만)
 ########################################################
-variable "primary_ip" {
+variable "bastion_ip" {
   type        = string
-  description = "Private IP address of Primary VM"
+  description = "Private IP address of bastion VM"
   default     = "10.1.1.110"                           
 }
 
-variable "secondary_ip" {
+variable "ceweb1_ip" {
   type        = string
-  description = "Private IP address of Secondary VM"
-  default     = "10.2.1.211"                           
+  description = "Private IP address of ceweb VM1"
+  default     = "10.1.1.111"                           
 }
 
-variable "tertiary_ip" {
+variable "bbweb1_ip" {
   type        = string
-  description = "Private IP address of Tertiary VM"
-  default     = "10.3.1.31"                           
+  description = "Private IP address of bbweb VM1"
+  default     = "10.2.1.211"                           
 }
 
 ########################################################
@@ -60,17 +48,12 @@ variable "vpcs" {
     {
       name        = "VPC1"
       cidr        = "10.1.0.0/16"
-      description = "Primary VPC"
+      description = "ceweb VPC"
     },
     {
       name        = "VPC2"
       cidr        = "10.2.0.0/16"
-      description = "Secondary VPC"
-    },
-    {
-      name        = "VPC3"
-      cidr        = "10.3.0.0/16"
-      description = "Tertiary VPC"
+      description = "bbweb VPC"
     }
   ]
 }
@@ -93,21 +76,14 @@ variable "subnets" {
       cidr        = "10.1.1.0/24"
       type        = "GENERAL"
       vpc_name    = "VPC1"
-      description = "Primary Subnet"
+      description = "ceweb Subnet"
     },
     {
       name        = "Subnet21"
       cidr        = "10.2.1.0/24"
       type        = "GENERAL"
       vpc_name    = "VPC2"
-      description = "Secondary Subnet"
-    },
-    {
-      name        = "Subnet31"
-      cidr        = "10.3.1.0/24"
-      type        = "GENERAL"
-      vpc_name    = "VPC3"
-      description = "Tertiary Subnet"
+      description = "bbweb Subnet"
     }
   ]
 }
@@ -131,19 +107,19 @@ variable "public_ips" {
 ########################################################
 # Security Group 변수 정의
 ########################################################
-variable "security_group_primary" {
+variable "security_group_bastion" {
     type        = string
-    default     = "primarySG"
+    default     = "bastionSG"
   }
 
-variable "security_group_secondary" {
+variable "security_group_ceweb" {
     type        = string
-    default     = "secondarySG"
+    default     = "cewebSG"
   }
 
-variable "security_group_tertiary" {
+variable "security_group_bbweb" {
     type        = string
-    default     = "tertiarySG"
+    default     = "bbwebSG"
   }
 
 ########################################################
@@ -170,7 +146,7 @@ variable "image_rocky_scp_os_version" {
 }
 
 ########################################################
-# Virtual Server 변수 정의
+# Virtual Server 변수 정의 (3개 VM만)
 ########################################################
 
 variable "server_type_id" {
@@ -178,36 +154,36 @@ variable "server_type_id" {
   default = "s1v1m2"
 }
 
-variable "vm_primary" {
+variable "vm_bastion" {
   type = object({
     name = string
     description = string
   })
   default = {
-    name = "vm110w"
-    description = "Primary VM"
+    name = "bastionvm110w"
+    description = "bastion VM"
   }
 }
 
-variable "vm_secondary" {
+variable "vm_ceweb1" {
   type = object({
     name = string
     description = string
   })
   default = {
-    name = "vm211r"
-    description = "Secondary VM"
+    name = "cewebvm111r"
+    description = "ceweb VM1"
   }
 }
 
-variable "vm_tertiary" {
+variable "vm_bbweb1" {
   type = object({
     name = string
     description = string
   })
   default = {
-    name = "vm311r"
-    description = "Tertiary VM"
+    name = "bbwebvm211r"
+    description = "bbweb VM1"
   }
 }
 

@@ -1,20 +1,33 @@
 ########################################################
+# 공통 태그 설정
+########################################################
+variable "common_tags" {
+  type        = map(string)
+  description = "Common tags to be applied to all resources"
+  default = {
+    name      = "advance_networking_lab"
+    createdby = "terraform"
+  }
+}
+
+########################################################
 # 수강자 입력 항목
 ########################################################
+
+variable "user_public_ip" {
+  type        = string
+  description = "Public IP address of user PC"
+  default     = "x.x.x.x"                                # 수강자 PC의 Public IP 주소 입력
+}
+
 variable "keypair_name" {
   type        = string
   description = "Key Pair to access VM"
   default     = "mykey"                                 # 기존 Key Pair 이름으로 변경
 }
 
-variable "user_public_ip" {
-  type        = string
-  description = "Public IP address of user PC"
-  default     = "x.x.x.x"                           # 수강자 PC의 Public IP 주소 입력
-}
-
 ########################################################
-# VM Private IP 주소 (3개 VM만)
+# VM Private IP 주소 (Cross VPC Load Balancing)
 ########################################################
 variable "bastion_ip" {
   type        = string
@@ -24,21 +37,21 @@ variable "bastion_ip" {
 
 variable "ceweb1_ip" {
   type        = string
-  description = "Private IP address of ceweb VM1"
+  description = "Private IP address of Creative Energy web VM"
   default     = "10.1.1.111"                           
 }
 
 variable "bbweb1_ip" {
   type        = string
-  description = "Private IP address of bbweb VM1"
+  description = "Private IP address of Big Boys web VM"
   default     = "10.2.1.211"                           
 }
 
 ########################################################
-# VPC 변수 정의
+# VPC 변수 정의 (2개 VPC for Cross VPC Load Balancing)
 ########################################################
 variable "vpcs" {
-  description = "VPC for Creative Energy"
+  description = "VPCs for Cross VPC Load Balancing"
   type = list(object({
     name        = string
     cidr        = string
@@ -48,21 +61,21 @@ variable "vpcs" {
     {
       name        = "VPC1"
       cidr        = "10.1.0.0/16"
-      description = "ceweb VPC"
+      description = "Creative Energy VPC"
     },
     {
       name        = "VPC2"
       cidr        = "10.2.0.0/16"
-      description = "bbweb VPC"
+      description = "Big Boys VPC"
     }
   ]
 }
 
 ########################################################
-# Subnet 변수 정의
+# Subnet 변수 정의 (각 VPC당 1개씩)
 ########################################################
 variable "subnets" {
-  description = "Subnet for Creative Energy"
+  description = "Subnets for Cross VPC Load Balancing"
   type = list(object({
     name        = string
     cidr        = string
@@ -76,14 +89,14 @@ variable "subnets" {
       cidr        = "10.1.1.0/24"
       type        = "GENERAL"
       vpc_name    = "VPC1"
-      description = "ceweb Subnet"
+      description = "Creative Energy Subnet"
     },
     {
       name        = "Subnet21"
       cidr        = "10.2.1.0/24"
       type        = "GENERAL"
       vpc_name    = "VPC2"
-      description = "bbweb Subnet"
+      description = "Big Boys Subnet"
     }
   ]
 }
@@ -91,16 +104,15 @@ variable "subnets" {
 ########################################################
 # Public IP 변수 정의
 ########################################################
-
 variable "public_ips" {
   type = list(object({
     name        = string
     description = string
   }))
   default = [
-    { name = "PIP1", description = "Public IP for VM" },
-    { name = "PIP2", description = "Public IP for VM" },
-    { name = "PIP3", description = "Public IP for VM" }
+    { name = "PIP1", description = "Public IP for Bastion VM" },
+    { name = "PIP2", description = "Public IP for Creative Energy Web VM" },
+    { name = "PIP3", description = "Public IP for Big Boys Web VM" }
   ]
 }
 
@@ -146,9 +158,8 @@ variable "image_rocky_scp_os_version" {
 }
 
 ########################################################
-# Virtual Server 변수 정의 (3개 VM만)
+# Virtual Server 변수 정의 (Cross VPC 구성)
 ########################################################
-
 variable "server_type_id" {
   type    = string
   default = "s1v1m2"
@@ -161,7 +172,7 @@ variable "vm_bastion" {
   })
   default = {
     name = "bastionvm110w"
-    description = "bastion VM"
+    description = "Bastion VM for Cross VPC Access"
   }
 }
 
@@ -172,7 +183,7 @@ variable "vm_ceweb1" {
   })
   default = {
     name = "cewebvm111r"
-    description = "ceweb VM1"
+    description = "Creative Energy Web VM1"
   }
 }
 
@@ -183,7 +194,7 @@ variable "vm_bbweb1" {
   })
   default = {
     name = "bbwebvm211r"
-    description = "bbweb VM1"
+    description = "Big Boys Web VM1"
   }
 }
 

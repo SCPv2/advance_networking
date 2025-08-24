@@ -22,6 +22,8 @@ resource "samsungcloudplatformv2_vpc_vpc" "vpcs" {
   name        = each.value.name
   cidr        = each.value.cidr
   description = lookup(each.value, "description", null)
+
+  tags = var.common_tags
 }
 
 ########################################################
@@ -33,6 +35,8 @@ resource "samsungcloudplatformv2_vpc_internet_gateway" "igw" {
   vpc_id            = each.value.id
   firewall_enabled  = true
   firewall_loggable = false
+
+  tags = var.common_tags
 
   depends_on = [samsungcloudplatformv2_vpc_vpc.vpcs]
 }
@@ -47,6 +51,8 @@ resource "samsungcloudplatformv2_vpc_subnet" "subnets" {
   type        = each.value.type
   description = each.value.description
   vpc_id      = samsungcloudplatformv2_vpc_vpc.vpcs[each.value.vpc_name].id
+
+  tags = var.common_tags
 
   depends_on  = [samsungcloudplatformv2_vpc_internet_gateway.igw]
 }
@@ -66,6 +72,8 @@ resource "samsungcloudplatformv2_vpc_publicip" "publicips" {
   type        = "IGW"
   description = each.value.description
 
+  tags = var.common_tags
+
  depends_on = [samsungcloudplatformv2_vpc_subnet.subnets] 
 }
 
@@ -75,11 +83,15 @@ resource "samsungcloudplatformv2_vpc_publicip" "publicips" {
 resource "samsungcloudplatformv2_security_group_security_group" "bastion_sg" {
   name        = var.security_group_bastion
   loggable    = false
+
+  tags = var.common_tags
 }
 
 resource "samsungcloudplatformv2_security_group_security_group" "nfsvm_sg" {
   name        = var.security_group_web
   loggable    = false
+
+  tags = var.common_tags
 }
 
 ########################################################
@@ -227,6 +239,8 @@ resource "samsungcloudplatformv2_vpc_nat_gateway" "natgateway" {
     publicip_id = samsungcloudplatformv2_vpc_publicip.publicips["PIP2"].id
     description = "NAT for NFSVM"
 
+    tags = var.common_tags
+
     depends_on = [
     samsungcloudplatformv2_security_group_security_group.bastion_sg,
     samsungcloudplatformv2_vpc_subnet.subnets,
@@ -245,6 +259,8 @@ resource "samsungcloudplatformv2_vpc_port" "bastion_port" {
 
   security_groups = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
 
+  tags = var.common_tags
+
   depends_on = [
     samsungcloudplatformv2_security_group_security_group.bastion_sg,
     samsungcloudplatformv2_vpc_subnet.subnets
@@ -258,6 +274,8 @@ resource "samsungcloudplatformv2_vpc_port" "nfsvm_port" {
   fixed_ip_address  = var.nfsvm_ip
 
   security_groups = [samsungcloudplatformv2_security_group_security_group.nfsvm_sg.id]
+
+  tags = var.common_tags
 
   depends_on = [
     samsungcloudplatformv2_security_group_security_group.bastion_sg,
@@ -339,6 +357,8 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm1" {
 
   security_groups = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
 
+  tags = var.common_tags
+
   depends_on = [
     samsungcloudplatformv2_vpc_subnet.subnets,
     samsungcloudplatformv2_security_group_security_group.bastion_sg,
@@ -371,6 +391,8 @@ resource "samsungcloudplatformv2_virtualserver_server" "vm2" {
   security_groups = [samsungcloudplatformv2_security_group_security_group.nfsvm_sg.id] 
 
   user_data = base64encode(file("${path.module}/install_nfsvm.sh"))
+
+  tags = var.common_tags
 
   depends_on = [
     samsungcloudplatformv2_vpc_subnet.subnets,

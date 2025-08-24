@@ -33,13 +33,15 @@ locals {
 }
 
 ########################################################
-# VPC 자원 생성
+# VPC 자원 생성 (2개 VPC)
 ########################################################
 resource "samsungcloudplatformv2_vpc_vpc" "vpcs" {
   for_each    = { for v in var.vpcs : v.name => v }
   name        = each.value.name
   cidr        = each.value.cidr
   description = lookup(each.value, "description", null)
+
+  tags = var.common_tags
 }
 
 ########################################################
@@ -48,421 +50,456 @@ resource "samsungcloudplatformv2_vpc_vpc" "vpcs" {
 resource "samsungcloudplatformv2_vpc_internet_gateway" "igw" {
   for_each          = samsungcloudplatformv2_vpc_vpc.vpcs
   type              = "IGW"
+  name              = "${each.value.name}_igw"
   vpc_id            = each.value.id
   firewall_enabled  = true
-  firewall_loggable = false
+  firewall_loggable = true
+  description       = "IGW for ${each.value.name}"
 
-  depends_on = [samsungcloudplatformv2_vpc_vpc.vpcs]
+  tags = var.common_tags
 }
 
 ########################################################
-# Subnet 자원 생성
+# Subnet 생성 (각 VPC당 1개씩)
 ########################################################
 resource "samsungcloudplatformv2_vpc_subnet" "subnets" {
-  for_each    = { for sb in var.subnets : sb.name => sb }
+  for_each = { for s in var.subnets : s.name => s }
+  
   name        = each.value.name
-  cidr        = each.value.cidr
   type        = each.value.type
-  description = each.value.description
   vpc_id      = samsungcloudplatformv2_vpc_vpc.vpcs[each.value.vpc_name].id
-
-  depends_on  = [samsungcloudplatformv2_vpc_internet_gateway.igw]
-}
-
-########################################################
-# 기존 Key Pair 조회
-########################################################
-data "samsungcloudplatformv2_virtualserver_keypair" "kp" {
-  name = var.keypair_name
-}
-
-########################################################
-# Public IP
-########################################################
-resource "samsungcloudplatformv2_vpc_publicip" "publicips" {
-  for_each    = { for pip in var.public_ips : pip.name => pip }
-  type        = "IGW"
+  cidr        = each.value.cidr
   description = each.value.description
 
- depends_on = [samsungcloudplatformv2_vpc_subnet.subnets] 
+  tags = var.common_tags
 }
 
 ########################################################
-# Security Group
+# Public IP 생성 (3개: Bastion, CE Web, BB Web)
+########################################################
+resource "samsungcloudplatformv2_vpc_public_ip" "pips" {
+  for_each = { for p in var.public_ips : p.name => p }
+  
+  name        = each.value.name
+  description = each.value.description
+  ip_type     = "IGW"
+
+  tags = var.common_tags
+}
+
+########################################################
+# Firewall Rules for Internet Gateway
+########################################################
+resource "samsungcloudplatformv2_vpc_firewall_rule" "igw_rules" {
+  for_each = samsungcloudplatformv2_vpc_internet_gateway.igw
+
+  firewall_id = each.value.firewall_id
+  name        = "${each.key}_firewall_rules"
+  description = "Firewall rules for ${each.key}"
+  
+  # Allow outbound HTTP/HTTPS from VMs to Internet
+  outbound_rule {
+    name        = "outbound_http_https"
+    action      = "ALLOW"
+    protocol    = "TCP"
+    priority    = 1
+    source      = [samsungcloudplatformv2_vpc_vpc.vpcs[each.key].cidr]
+    destination = ["0.0.0.0/0"]
+    port        = [80, 443]
+    description = "Allow HTTP/HTTPS outbound from VMs to Internet"
+  }
+  
+  # Allow RDP inbound to bastion (only for VPC1)
+  dynamic "inbound_rule" {
+    for_each = each.key == "VPC1" ? [1] : []
+    content {
+      name        = "inbound_rdp_bastion"
+      action      = "ALLOW" 
+      protocol    = "TCP"
+      priority    = 2
+      source      = [var.user_public_ip]
+      destination = [var.bastion_ip]
+      port        = [3389]
+      description = "Allow RDP inbound to bastion from user PC"
+    }
+  }
+  
+  # Allow HTTP inbound to web servers
+  dynamic "inbound_rule" {
+    for_each = each.key == "VPC1" ? [var.ceweb1_ip] : each.key == "VPC2" ? [var.bbweb1_ip] : []
+    content {
+      name        = "inbound_http_web"
+      action      = "ALLOW"
+      protocol    = "TCP" 
+      priority    = 3
+      source      = [var.user_public_ip]
+      destination = [inbound_rule.value]
+      port        = [80]
+      description = "Allow HTTP inbound to web server from user PC"
+    }
+  }
+
+  tags = var.common_tags
+}
+
+########################################################
+# Security Group for Bastion (VPC1)
 ########################################################
 resource "samsungcloudplatformv2_security_group_security_group" "bastion_sg" {
   name        = var.security_group_bastion
-  loggable    = false
+  description = "Security group for bastion VM"
+  vpc_id      = samsungcloudplatformv2_vpc_vpc.vpcs["VPC1"].id
+  
+  tags = var.common_tags
 }
 
+resource "samsungcloudplatformv2_security_group_rule" "bastion_sg_rules" {
+  security_group_id = samsungcloudplatformv2_security_group_security_group.bastion_sg.id
+  name              = "${var.security_group_bastion}_rules"
+  description       = "Security group rules for bastion"
+  
+  # Allow RDP inbound from user PC
+  inbound_rule {
+    name            = "inbound_rdp_user"
+    ip_protocol     = "TCP"
+    from_port       = 3389
+    to_port         = 3389
+    source_address  = [var.user_public_ip]
+    description     = "RDP inbound from user PC"
+  }
+  
+  # Allow SSH outbound to CE web server
+  outbound_rule {
+    name                = "outbound_ssh_ceweb"
+    ip_protocol         = "TCP"
+    from_port           = 22
+    to_port             = 22
+    remote_group_id     = samsungcloudplatformv2_security_group_security_group.ceweb_sg.id
+    description         = "SSH outbound to CE web server"
+  }
+  
+  # Allow SSH outbound to BB web server (Cross VPC)
+  outbound_rule {
+    name                = "outbound_ssh_bbweb"
+    ip_protocol         = "TCP"
+    from_port           = 22
+    to_port             = 22
+    destination_address = [var.bbweb1_ip]
+    description         = "SSH outbound to BB web server"
+  }
+  
+  # Allow HTTP/HTTPS outbound to Internet
+  outbound_rule {
+    name                = "outbound_http_internet"
+    ip_protocol         = "TCP"
+    from_port           = 80
+    to_port             = 80
+    destination_address = ["0.0.0.0/0"]
+    description         = "HTTP outbound to Internet"
+  }
+  
+  outbound_rule {
+    name                = "outbound_https_internet"
+    ip_protocol         = "TCP"
+    from_port           = 443
+    to_port             = 443
+    destination_address = ["0.0.0.0/0"]
+    description         = "HTTPS outbound to Internet"
+  }
+  
+  tags = var.common_tags
+}
+
+########################################################
+# Security Group for Creative Energy Web Server (VPC1)
+########################################################
 resource "samsungcloudplatformv2_security_group_security_group" "ceweb_sg" {
   name        = var.security_group_ceweb
-  loggable    = false
+  description = "Security group for Creative Energy web VM"
+  vpc_id      = samsungcloudplatformv2_vpc_vpc.vpcs["VPC1"].id
+  
+  tags = var.common_tags
 }
 
+resource "samsungcloudplatformv2_security_group_rule" "ceweb_sg_rules" {
+  security_group_id = samsungcloudplatformv2_security_group_security_group.ceweb_sg.id
+  name              = "${var.security_group_ceweb}_rules"
+  description       = "Security group rules for Creative Energy web server"
+  
+  # Allow SSH inbound from bastion
+  inbound_rule {
+    name            = "inbound_ssh_bastion"
+    ip_protocol     = "TCP"
+    from_port       = 22
+    to_port         = 22
+    remote_group_id = samsungcloudplatformv2_security_group_security_group.bastion_sg.id
+    description     = "SSH inbound from bastion"
+  }
+  
+  # Allow HTTP inbound from user PC
+  inbound_rule {
+    name            = "inbound_http_user"
+    ip_protocol     = "TCP"
+    from_port       = 80
+    to_port         = 80
+    source_address  = [var.user_public_ip]
+    description     = "HTTP inbound from user PC"
+  }
+  
+  # Allow HTTP inbound from Load Balancer (준비 목적)
+  inbound_rule {
+    name            = "inbound_http_lb_ready"
+    ip_protocol     = "TCP"
+    from_port       = 80
+    to_port         = 80
+    source_address  = ["10.0.0.0/8"]
+    description     = "HTTP inbound from Load Balancer (for future setup)"
+  }
+  
+  # Allow HTTP/HTTPS outbound to Internet
+  outbound_rule {
+    name                = "outbound_http_internet"
+    ip_protocol         = "TCP"
+    from_port           = 80
+    to_port             = 80
+    destination_address = ["0.0.0.0/0"]
+    description         = "HTTP outbound to Internet"
+  }
+  
+  outbound_rule {
+    name                = "outbound_https_internet"
+    ip_protocol         = "TCP"
+    from_port           = 443
+    to_port             = 443
+    destination_address = ["0.0.0.0/0"]
+    description         = "HTTPS outbound to Internet"
+  }
+  
+  tags = var.common_tags
+}
+
+########################################################
+# Security Group for Big Boys Web Server (VPC2)
+########################################################
 resource "samsungcloudplatformv2_security_group_security_group" "bbweb_sg" {
   name        = var.security_group_bbweb
-  loggable    = false
+  description = "Security group for Big Boys web VM"
+  vpc_id      = samsungcloudplatformv2_vpc_vpc.vpcs["VPC2"].id
+  
+  tags = var.common_tags
 }
 
-########################################################
-# 기본 통신 규칙 (Firewall)
-########################################################
-data "samsungcloudplatformv2_firewall_firewalls" "igw_fws" {
-  for_each = samsungcloudplatformv2_vpc_internet_gateway.igw
-  name     = "FW_IGW_${each.key}"
-
-  depends_on = [samsungcloudplatformv2_vpc_internet_gateway.igw]
-}
-
-resource "samsungcloudplatformv2_firewall_firewall_rule" "vm_web_out_fw" {
-  for_each = { for k, v in data.samsungcloudplatformv2_firewall_firewalls.igw_fws : k => v.ids[0] }
-
-  firewall_id = each.value
-  firewall_rule_create = {
-    action              = "ALLOW"
-    direction           = "OUTBOUND"
-    status              = "ENABLE"
-    source_address      = [var.bastion_ip, var.ceweb1_ip, var.bbweb1_ip]
+resource "samsungcloudplatformv2_security_group_rule" "bbweb_sg_rules" {
+  security_group_id = samsungcloudplatformv2_security_group_security_group.bbweb_sg.id
+  name              = "${var.security_group_bbweb}_rules"
+  description       = "Security group rules for Big Boys web server"
+  
+  # Allow SSH inbound from bastion (Cross VPC)
+  inbound_rule {
+    name            = "inbound_ssh_bastion_cross"
+    ip_protocol     = "TCP"
+    from_port       = 22
+    to_port         = 22
+    source_address  = [var.bastion_ip]
+    description     = "SSH inbound from bastion (Cross VPC)"
+  }
+  
+  # Allow HTTP inbound from user PC
+  inbound_rule {
+    name            = "inbound_http_user"
+    ip_protocol     = "TCP"
+    from_port       = 80
+    to_port         = 80
+    source_address  = [var.user_public_ip]
+    description     = "HTTP inbound from user PC"
+  }
+  
+  # Allow HTTP inbound from Load Balancer (준비 목적)
+  inbound_rule {
+    name            = "inbound_http_lb_ready"
+    ip_protocol     = "TCP"
+    from_port       = 80
+    to_port         = 80
+    source_address  = ["10.0.0.0/8"]
+    description     = "HTTP inbound from Load Balancer (for future setup)"
+  }
+  
+  # Allow HTTP/HTTPS outbound to Internet
+  outbound_rule {
+    name                = "outbound_http_internet"
+    ip_protocol         = "TCP"
+    from_port           = 80
+    to_port             = 80
     destination_address = ["0.0.0.0/0"]
-    description         = "HTTP/HTTPS outbound to Internet"
-    service = [
-      { service_type = "TCP", service_value = "80" },
-      { service_type = "TCP", service_value = "443" }
-    ]
+    description         = "HTTP outbound to Internet"
   }
-
-  depends_on = [samsungcloudplatformv2_vpc_internet_gateway.igw]
-}
-
-resource "samsungcloudplatformv2_firewall_firewall_rule" "bastion_rdp_in_fw" {
-  for_each = { for k, v in data.samsungcloudplatformv2_firewall_firewalls.igw_fws : k => v if k == local.ceweb_vpc_name }
-
-  firewall_id = each.value.ids[0]
-  firewall_rule_create = {
-    action              = "ALLOW"
-    direction           = "INBOUND"
-    status              = "ENABLE"
-    source_address      = ["${var.user_public_ip}/32"]
-    destination_address = ["${var.bastion_ip}/32"]
-    description         = "RDP inbound to bastion"
-    service = [
-      { service_type = "TCP", service_value = "3389" }
-    ]
+  
+  outbound_rule {
+    name                = "outbound_https_internet"
+    ip_protocol         = "TCP"
+    from_port           = 443
+    to_port             = 443
+    destination_address = ["0.0.0.0/0"]
+    description         = "HTTPS outbound to Internet"
   }
-
-  depends_on = [samsungcloudplatformv2_firewall_firewall_rule.vm_web_out_fw]
+  
+  tags = var.common_tags
 }
 
 ########################################################
-# 기본 통신 규칙 (Security Group) - 순차적 종속성 적용
-########################################################
-resource "samsungcloudplatformv2_security_group_security_group_rule" "bastion_RDP_in_sg" {
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  security_group_id = samsungcloudplatformv2_security_group_security_group.bastion_sg.id
-  protocol          = "tcp"
-  port_range_min    = 3389
-  port_range_max    = 3389
-  description       = "RDP inbound to bastion VM"
-  remote_ip_prefix  = "${var.user_public_ip}/32"
-
-  depends_on = [samsungcloudplatformv2_security_group_security_group.bastion_sg]
-}
-
-resource "samsungcloudplatformv2_security_group_security_group_rule" "bastion_http_out_sg" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  security_group_id = samsungcloudplatformv2_security_group_security_group.bastion_sg.id
-  protocol          = "tcp"
-  port_range_min    = 80
-  port_range_max    = 80
-  description       = "HTTP outbound to Internet"
-  remote_ip_prefix  = "0.0.0.0/0"
-
-  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.bastion_RDP_in_sg]
-}
-
-resource "samsungcloudplatformv2_security_group_security_group_rule" "bastion_https_out_sg" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  security_group_id = samsungcloudplatformv2_security_group_security_group.bastion_sg.id
-  protocol          = "tcp"
-  port_range_min    = 443
-  port_range_max    = 443
-  description       = "HTTPS outbound to Internet"
-  remote_ip_prefix  = "0.0.0.0/0"
-
-  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.bastion_http_out_sg]
-}
-
-resource "samsungcloudplatformv2_security_group_security_group_rule" "ceweb_http_out_sg" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  security_group_id = samsungcloudplatformv2_security_group_security_group.ceweb_sg.id
-  protocol          = "tcp"
-  port_range_min    = 80
-  port_range_max    = 80
-  description       = "HTTP outbound to Internet"
-  remote_ip_prefix  = "0.0.0.0/0"
-
-  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.bastion_https_out_sg]
-}
-
-resource "samsungcloudplatformv2_security_group_security_group_rule" "ceweb_https_out_sg" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  security_group_id = samsungcloudplatformv2_security_group_security_group.ceweb_sg.id
-  protocol          = "tcp"
-  port_range_min    = 443
-  port_range_max    = 443
-  description       = "HTTPS outbound to Internet"
-  remote_ip_prefix  = "0.0.0.0/0"
-
-  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.ceweb_http_out_sg]
-}
-
-resource "samsungcloudplatformv2_security_group_security_group_rule" "bbweb_http_out_sg" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  security_group_id = samsungcloudplatformv2_security_group_security_group.bbweb_sg.id
-  protocol          = "tcp"
-  port_range_min    = 80
-  port_range_max    = 80
-  description       = "HTTP outbound to Internet"
-  remote_ip_prefix  = "0.0.0.0/0"
-
-  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.ceweb_https_out_sg]
-}
-
-resource "samsungcloudplatformv2_security_group_security_group_rule" "bbweb_https_out_sg" {
-  direction         = "egress"
-  ethertype         = "IPv4"
-  security_group_id = samsungcloudplatformv2_security_group_security_group.bbweb_sg.id
-  protocol          = "tcp"
-  port_range_min    = 443
-  port_range_max    = 443
-  description       = "HTTPS outbound to Internet"
-  remote_ip_prefix  = "0.0.0.0/0"
-
-  depends_on = [samsungcloudplatformv2_security_group_security_group_rule.bbweb_http_out_sg]
-}
-
-########################################################
-# Subnet에 NAT Gateway 연결 - 하드코딩 제거
-########################################################
-
-resource "samsungcloudplatformv2_vpc_nat_gateway" "ceweb_natgateway" {
-    subnet_id = samsungcloudplatformv2_vpc_subnet.subnets[local.ceweb_subnet_name].id
-    publicip_id = samsungcloudplatformv2_vpc_publicip.publicips[local.ceweb_pip_name].id
-    description = "NAT for ceweb"
-
-    depends_on = [
-    samsungcloudplatformv2_security_group_security_group.bastion_sg,
-    samsungcloudplatformv2_vpc_subnet.subnets,
-    samsungcloudplatformv2_vpc_publicip.publicips
-  ]
-}
-
-resource "samsungcloudplatformv2_vpc_nat_gateway" "bbweb_natgateway" {
-    subnet_id = samsungcloudplatformv2_vpc_subnet.subnets[local.bbweb_subnet_name].id
-    publicip_id = samsungcloudplatformv2_vpc_publicip.publicips[local.bbweb_pip_name].id
-    description = "NAT for bbweb"
-
-    depends_on = [
-    samsungcloudplatformv2_security_group_security_group.bastion_sg,
-    samsungcloudplatformv2_vpc_subnet.subnets,
-    samsungcloudplatformv2_vpc_publicip.publicips
-  ]
-}
-
-########################################################
-# Ports - 하드코딩 제거
+# Port for VM IP Assignment
 ########################################################
 resource "samsungcloudplatformv2_vpc_port" "bastion_port" {
-  name              = "bastionport"
-  description       = "bastion port"
+  name              = "bastionPort"
   subnet_id         = samsungcloudplatformv2_vpc_subnet.subnets[local.ceweb_subnet_name].id
-  fixed_ip_address  = var.bastion_ip
+  private_ip        = var.bastion_ip
+  security_group_ids = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
+  description       = "Port for bastion VM"
 
-  security_groups = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
-
-  depends_on = [
-    samsungcloudplatformv2_security_group_security_group.bastion_sg,
-    samsungcloudplatformv2_vpc_subnet.subnets
-  ]
+  tags = var.common_tags
 }
 
-resource "samsungcloudplatformv2_vpc_port" "ceweb1_port" {
-  name              = "ceweb1port"
-  description       = "ceweb1 port"
-  subnet_id         = samsungcloudplatformv2_vpc_subnet.subnets[local.ceweb_subnet_name].id
-  fixed_ip_address  = var.ceweb1_ip
+resource "samsungcloudplatformv2_vpc_port" "ceweb_port" {
+  name               = "cewebPort"
+  subnet_id          = samsungcloudplatformv2_vpc_subnet.subnets[local.ceweb_subnet_name].id
+  private_ip         = var.ceweb1_ip
+  security_group_ids = [samsungcloudplatformv2_security_group_security_group.ceweb_sg.id]
+  description        = "Port for Creative Energy web VM"
 
-  security_groups = [samsungcloudplatformv2_security_group_security_group.ceweb_sg.id]
-
-  depends_on = [
-    samsungcloudplatformv2_security_group_security_group.ceweb_sg,
-    samsungcloudplatformv2_vpc_subnet.subnets
-  ]
+  tags = var.common_tags
 }
 
-resource "samsungcloudplatformv2_vpc_port" "bbweb1_port" {
-  name              = "bbweb1port"
-  description       = "bbweb1 port"
-  subnet_id         = samsungcloudplatformv2_vpc_subnet.subnets[local.bbweb_subnet_name].id
-  fixed_ip_address  = var.bbweb1_ip
+resource "samsungcloudplatformv2_vpc_port" "bbweb_port" {
+  name               = "bbwebPort"
+  subnet_id          = samsungcloudplatformv2_vpc_subnet.subnets[local.bbweb_subnet_name].id
+  private_ip         = var.bbweb1_ip
+  security_group_ids = [samsungcloudplatformv2_security_group_security_group.bbweb_sg.id]
+  description        = "Port for Big Boys web VM"
 
-  security_groups = [samsungcloudplatformv2_security_group_security_group.bbweb_sg.id]
-
-  depends_on = [
-    samsungcloudplatformv2_security_group_security_group.bbweb_sg,
-    samsungcloudplatformv2_vpc_subnet.subnets
-  ]
+  tags = var.common_tags
 }
 
 ########################################################
-# Virtual Server Standard Image ID 조회
+# Virtual Server Standard Image
 ########################################################
-# Windows 이미지 조회
-data "samsungcloudplatformv2_virtualserver_images" "windows" {
-  os_distro = var.image_windows_os_distro
-  status    = "active"
-
-  filter {
-    name      = "os_distro"
-    values    = [var.image_windows_os_distro]
-    use_regex = false
-  }
-  filter {
-    name      = "scp_os_version"
-    values    = [var.image_windows_scp_os_version]
-    use_regex = false
-  }
+data "samsungcloudplatformv2_standard_image" "windows_image" {
+  service_group = "COMPUTE"
+  service       = "Virtual Server"
+  region        = "KOREA"
+  os_distro     = var.image_windows_os_distro
+  os_version    = var.image_windows_scp_os_version
 }
 
-# Rocky 이미지 조회
-data "samsungcloudplatformv2_virtualserver_images" "rocky" {
-  os_distro = var.image_rocky_os_distro
-  status    = "active"
-
-  filter {
-    name      = "os_distro"
-    values    = [var.image_rocky_os_distro]
-    use_regex = false
-  }
-  filter {
-    name      = "scp_os_version"
-    values    = [var.image_rocky_scp_os_version]
-    use_regex = false
-  }
-}
-
-# 이미지 Local 변수 지정
-locals {
-  windows_ids = try(data.samsungcloudplatformv2_virtualserver_images.windows.ids, [])
-  rocky_ids   = try(data.samsungcloudplatformv2_virtualserver_images.rocky.ids, [])
-
-  windows_image_id_first = length(local.windows_ids) > 0 ? local.windows_ids[0] : ""
-  rocky_image_id_first   = length(local.rocky_ids)   > 0 ? local.rocky_ids[0]   : ""
+data "samsungcloudplatformv2_standard_image" "rocky_image" {
+  service_group = "COMPUTE"
+  service       = "Virtual Server" 
+  region        = "KOREA"
+  os_distro     = var.image_rocky_os_distro
+  os_version    = var.image_rocky_scp_os_version
 }
 
 ########################################################
-# Virtual Server 자원 생성 - 하드코딩 제거
+# Bastion VM (Windows - VPC1)
 ########################################################
-
-# bastion VM
-resource "samsungcloudplatformv2_virtualserver_server" "vm1" {
-  name           = var.vm_bastion.name
-  keypair_name   = data.samsungcloudplatformv2_virtualserver_keypair.kp.name
-  server_type_id = var.server_type_id
-  state ="ACTIVE"
-
-  boot_volume = {
-    size                  = var.boot_volume_windows.size
-    type                  = var.boot_volume_windows.type
-    delete_on_termination = var.boot_volume_windows.delete_on_termination
-  }
-
-  image_id = local.windows_image_id_first
-
-  networks = {
-    nic0 = {
-      public_ip_id = samsungcloudplatformv2_vpc_publicip.publicips[local.bastion_pip_name].id,
-      port_id      = samsungcloudplatformv2_vpc_port.bastion_port.id
-    }
-  }
-
-  security_groups = [samsungcloudplatformv2_security_group_security_group.bastion_sg.id]
-
-  depends_on = [
-    samsungcloudplatformv2_vpc_subnet.subnets,
-    samsungcloudplatformv2_security_group_security_group.bastion_sg,
-    samsungcloudplatformv2_vpc_publicip.publicips,
-    samsungcloudplatformv2_vpc_port.bastion_port
-  ]
-}
-
-# ceweb1 VM
-resource "samsungcloudplatformv2_virtualserver_server" "vm2" {
-  name           = var.vm_ceweb1.name
-  keypair_name   = data.samsungcloudplatformv2_virtualserver_keypair.kp.name
-  server_type_id = var.server_type_id
-  state ="ACTIVE"
-
-  boot_volume = {
-    size                  = var.boot_volume_rocky.size
-    type                  = var.boot_volume_rocky.type
-    delete_on_termination = var.boot_volume_rocky.delete_on_termination
-  }
-
-  image_id = local.rocky_image_id_first
-
-  networks = {
-    nic0 = {
-      port_id = samsungcloudplatformv2_vpc_port.ceweb1_port.id
-    }
+resource "samsungcloudplatformv2_virtualserver_server" "bastion_vm" {
+  name          = var.vm_bastion.name
+  description   = var.vm_bastion.description
+  server_type   = var.server_type_id
+  
+  # Boot Volume
+  initial_script {
+    storage_name = "${var.vm_bastion.name}_storage"
+    storage_size = var.boot_volume_windows.size
+    storage_type = var.boot_volume_windows.type
+    image_id     = data.samsungcloudplatformv2_standard_image.windows_image.id
   }
   
-  security_groups = [samsungcloudplatformv2_security_group_security_group.ceweb_sg.id] 
+  # Network
+  vpc_id        = samsungcloudplatformv2_vpc_vpc.vpcs[local.ceweb_vpc_name].id
+  subnet_id     = samsungcloudplatformv2_vpc_subnet.subnets[local.ceweb_subnet_name].id
+  use_hyper_threading = false
+  port_id       = samsungcloudplatformv2_vpc_port.bastion_port.id
+  public_ip_id  = samsungcloudplatformv2_vpc_public_ip.pips[local.bastion_pip_name].id
+  
+  # SSH Key
+  keypair_name  = var.keypair_name
+  
+  # Storage Settings
+  delete_on_termination = var.boot_volume_windows.delete_on_termination
+  
+  tags = var.common_tags
+}
 
+########################################################
+# Creative Energy Web VM (Rocky Linux - VPC1)
+########################################################
+resource "samsungcloudplatformv2_virtualserver_server" "ceweb_vm" {
+  name          = var.vm_ceweb1.name
+  description   = var.vm_ceweb1.description
+  server_type   = var.server_type_id
+  
+  # Boot Volume
+  initial_script {
+    storage_name = "${var.vm_ceweb1.name}_storage"
+    storage_size = var.boot_volume_rocky.size
+    storage_type = var.boot_volume_rocky.type
+    image_id     = data.samsungcloudplatformv2_standard_image.rocky_image.id
+  }
+  
+  # Network
+  vpc_id        = samsungcloudplatformv2_vpc_vpc.vpcs[local.ceweb_vpc_name].id
+  subnet_id     = samsungcloudplatformv2_vpc_subnet.subnets[local.ceweb_subnet_name].id
+  use_hyper_threading = false
+  port_id       = samsungcloudplatformv2_vpc_port.ceweb_port.id
+  public_ip_id  = samsungcloudplatformv2_vpc_public_ip.pips[local.ceweb_pip_name].id
+  
+  # SSH Key
+  keypair_name  = var.keypair_name
+  
+  # User Data Script
   user_data = base64encode(file("${path.module}/userdata_ceweb.sh"))
-
-  depends_on = [
-    samsungcloudplatformv2_vpc_subnet.subnets,
-    samsungcloudplatformv2_security_group_security_group.ceweb_sg,
-    samsungcloudplatformv2_vpc_port.ceweb1_port
-  ]
+  
+  # Storage Settings
+  delete_on_termination = var.boot_volume_rocky.delete_on_termination
+  
+  tags = var.common_tags
+  
+  depends_on = [samsungcloudplatformv2_virtualserver_server.bastion_vm]
 }
 
-# bbweb1 VM
-resource "samsungcloudplatformv2_virtualserver_server" "vm4" {
-  name           = var.vm_bbweb1.name
-  keypair_name   = data.samsungcloudplatformv2_virtualserver_keypair.kp.name
-  server_type_id = var.server_type_id
-  state ="ACTIVE"
-
-  boot_volume = {
-    size                  = var.boot_volume_rocky.size
-    type                  = var.boot_volume_rocky.type
-    delete_on_termination = var.boot_volume_rocky.delete_on_termination
-  }
-
-  image_id = local.rocky_image_id_first
-
-  networks = {
-    nic0 = {
-      port_id = samsungcloudplatformv2_vpc_port.bbweb1_port.id
-    }
+########################################################
+# Big Boys Web VM (Rocky Linux - VPC2)
+########################################################
+resource "samsungcloudplatformv2_virtualserver_server" "bbweb_vm" {
+  name          = var.vm_bbweb1.name
+  description   = var.vm_bbweb1.description
+  server_type   = var.server_type_id
+  
+  # Boot Volume
+  initial_script {
+    storage_name = "${var.vm_bbweb1.name}_storage"
+    storage_size = var.boot_volume_rocky.size
+    storage_type = var.boot_volume_rocky.type
+    image_id     = data.samsungcloudplatformv2_standard_image.rocky_image.id
   }
   
-  security_groups = [samsungcloudplatformv2_security_group_security_group.bbweb_sg.id] 
-
+  # Network
+  vpc_id        = samsungcloudplatformv2_vpc_vpc.vpcs[local.bbweb_vpc_name].id
+  subnet_id     = samsungcloudplatformv2_vpc_subnet.subnets[local.bbweb_subnet_name].id
+  use_hyper_threading = false
+  port_id       = samsungcloudplatformv2_vpc_port.bbweb_port.id
+  public_ip_id  = samsungcloudplatformv2_vpc_public_ip.pips[local.bbweb_pip_name].id
+  
+  # SSH Key
+  keypair_name  = var.keypair_name
+  
+  # User Data Script
   user_data = base64encode(file("${path.module}/userdata_bbweb.sh"))
-
-  depends_on = [
-    samsungcloudplatformv2_vpc_subnet.subnets,
-    samsungcloudplatformv2_security_group_security_group.bbweb_sg,
-    samsungcloudplatformv2_vpc_port.bbweb1_port
-  ]
+  
+  # Storage Settings
+  delete_on_termination = var.boot_volume_rocky.delete_on_termination
+  
+  tags = var.common_tags
+  
+  depends_on = [samsungcloudplatformv2_virtualserver_server.bastion_vm]
 }
