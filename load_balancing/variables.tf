@@ -224,7 +224,6 @@ variable "boot_volume_rocky" {
   }
 }
 
-# Virtual Server Standard Image 변수 정의
 variable "windows_image_id" {
   type        = string
   description = "[TERRAFORM_INFRA] Windows Server image ID"
