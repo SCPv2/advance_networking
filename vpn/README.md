@@ -1,4 +1,4 @@
-# IPsec VPN 연결
+# Samsung Cloud Platform v2 Advance IPsec VPN 구현
 
 ## 선행 실습
 
