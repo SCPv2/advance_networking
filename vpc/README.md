@@ -1,6 +1,6 @@
 # VPC 네트워크 설계 및 구현
 
-S3 Bucket Polity
+S3 Bucket Policy
 
 ```json
 {
@@ -24,3 +24,4 @@ S3 Bucket Polity
   ]
 }
 ```
+
