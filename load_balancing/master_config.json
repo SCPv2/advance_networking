@@ -1,0 +1,89 @@
+﻿{
+    "deployment":  {
+                       "git_branch":  "main",
+                       "git_repository":  "https://github.com/SCPv2/ceweb.git",
+                       "installation_mode":  "manual",
+                       "auto_deployment":  false,
+                       "rollback_enabled":  false,
+                       "ready_files":  {
+                                           "ceweb":  "z_ready2install_go2web-server",
+                                           "bbweb":  "z_ready2install_go2web-server"
+                                       }
+                   },
+    "security":  {
+                     "firewall":  {
+                                      "allowed_public_ips":  [
+                                                                 "x.x.x.x/32"
+                                                             ],
+                                      "ssh_key_name":  "mykey"
+                                  },
+                     "vpc_peering":  {
+                                         "vpc1_to_vpc2":  {
+                                                              "_comment":  "VPC Peering은 수동으로 구성 필요",
+                                                              "status":  "manual_configuration_required",
+                                                              "enabled":  false
+                                                          }
+                                     },
+                     "ssl":  {
+                                 "certificate_path":  "/etc/ssl/certs/certificate.crt",
+                                 "private_key_path":  "/etc/ssl/private/private.key"
+                             }
+                 },
+    "user_customization":  {
+                               "backup_retention_days":  7,
+                               "admin_email":  "admin@company.com",
+                               "timezone":  "Asia/Seoul",
+                               "company_name":  "Cross VPC Load Balancing Lab",
+                               "_comment":  "사용자 직접 수정 영역"
+                           },
+    "infrastructure":  {
+                           "load_balancer":  {
+                                                 "service_ip":  "",
+                                                 "health_check_enabled":  true,
+                                                 "session_persistence":  "SOURCE_IP",
+                                                 "algorithm":  "ROUND_ROBIN",
+                                                 "_comment":  "Load Balancer는 수동으로 추가 구성"
+                                             },
+                           "domain":  {
+                                          "_comment":  "DNS 설정은 Load Balancing에서 불필요 - 사용자가 Load Balancer 생성 후 필요시 수동 추가"
+                                      },
+                           "servers":  {
+                                           "bastion_ip":  "10.1.1.110",
+                                           "ceweb_server_ip":  "10.1.1.111",
+                                           "bbweb_server_ip":  "10.2.1.211"
+                                       },
+                           "network":  {
+                                           "vpc2_subnet_cidr":  "10.2.1.0/24",
+                                           "vpc2_cidr":  "10.2.0.0/16",
+                                           "vpc1_cidr":  "10.1.0.0/16",
+                                           "vpc1_subnet_cidr":  "10.1.1.0/24"
+                                       }
+                       },
+    "application":  {
+                        "bbweb_server":  {
+                                             "nginx_port":  80,
+                                             "health_check_path":  "/health",
+                                             "service_name":  "Big Boys Web",
+                                             "ssl_enabled":  false
+                                         },
+                        "ceweb_server":  {
+                                             "nginx_port":  80,
+                                             "health_check_path":  "/health",
+                                             "service_name":  "Creative Energy Web",
+                                             "ssl_enabled":  false
+                                         }
+                    },
+    "config_metadata":  {
+                            "architecture":  "Multi-VPC Load Balancing",
+                            "created":  "2025-09-25",
+                            "description":  "Samsung Cloud Platform Cross VPC Load Balancing Master Configuration",
+                            "version":  "1.0.0",
+                            "generated_from":  "variables.tf via terraform console"
+                        },
+    "monitoring":  {
+                       "health_check_interval":  30,
+                       "metrics_enabled":  true,
+                       "log_level":  "info",
+                       "cross_vpc_monitoring":  true
+                   }
+}

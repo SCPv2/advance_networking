@@ -148,6 +148,52 @@ resource "samsungcloudplatformv2_vpc_port" "bbweb_port" {
   ]
 }
 
+########################################################
+# Virtual Server Standard Image ID 조회
+########################################################
+# Windows 이미지 조회
+data "samsungcloudplatformv2_virtualserver_images" "windows" {
+  os_distro = var.image_windows_os_distro
+  status    = "active"
+
+  filter {
+    name      = "os_distro"
+    values    = [var.image_windows_os_distro]
+    use_regex = false
+  }
+  filter {
+    name      = "scp_os_version"
+    values    = [var.image_windows_scp_os_version]
+    use_regex = false
+  }
+}
+
+# Rocky 이미지 조회
+data "samsungcloudplatformv2_virtualserver_images" "rocky" {
+  os_distro = var.image_rocky_os_distro
+  status    = "active"
+
+  filter {
+    name      = "os_distro"
+    values    = [var.image_rocky_os_distro]
+    use_regex = false
+  }
+  filter {
+    name      = "scp_os_version"
+    values    = [var.image_rocky_scp_os_version]
+    use_regex = false
+  }
+}
+
+# 이미지 Local 변수 지정
+locals {
+  windows_ids = try(data.samsungcloudplatformv2_virtualserver_images.windows.ids, [])
+  rocky_ids   = try(data.samsungcloudplatformv2_virtualserver_images.rocky.ids, [])
+
+  windows_image_id_first = length(local.windows_ids) > 0 ? local.windows_ids[0] : ""
+  rocky_image_id_first   = length(local.rocky_ids)   > 0 ? local.rocky_ids[0]   : ""
+}
+
 #######################################################
 # Virtual Machine 생성 (예시 - 필요시 추가)
 ########################################################
@@ -165,7 +211,7 @@ resource "samsungcloudplatformv2_virtualserver_server" "bastion_vm" {
     delete_on_termination = var.boot_volume_windows.delete_on_termination
   }
   
-  image_id = var.windows_image_id
+  image_id = local.windows_image_id_first
   
   networks = {
     nic0 = {
@@ -198,7 +244,7 @@ resource "samsungcloudplatformv2_virtualserver_server" "ceweb_vm" {
     delete_on_termination = var.boot_volume_rocky.delete_on_termination
   }
   
-  image_id = var.rocky_image_id
+  image_id = local.rocky_image_id_first
   
   networks = {
     nic0 = {
@@ -233,7 +279,7 @@ resource "samsungcloudplatformv2_virtualserver_server" "bbweb_vm" {
     delete_on_termination = var.boot_volume_rocky.delete_on_termination
   }
   
-  image_id = var.rocky_image_id
+  image_id = local.rocky_image_id_first
   
   networks = {
     nic0 = {

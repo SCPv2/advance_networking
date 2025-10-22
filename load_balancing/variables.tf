@@ -17,13 +17,13 @@ variable "common_tags" {
 variable "user_public_ip" {
   type        = string
   description = "Public IP address of user PC"
-  default     = "x.x.x.x"                                # 수강자 PC의 Public IP 주소 입력
+  default     = "x.x.x.x" # 수강자 PC의 Public IP 주소 입력
 }
 
 variable "keypair_name" {
   type        = string
   description = "Key Pair to access VM"
-  default     = "mykey"                                 # 기존 Key Pair 이름으로 변경
+  default     = "mykey" # 기존 Key Pair 이름으로 변경
 }
 
 ########################################################
@@ -32,19 +32,19 @@ variable "keypair_name" {
 variable "bastion_ip" {
   type        = string
   description = "Private IP address of bastion VM"
-  default     = "10.1.1.110"                           
+  default     = "10.1.1.110"
 }
 
 variable "ceweb1_ip" {
   type        = string
   description = "Private IP address of Creative Energy web VM"
-  default     = "10.1.1.111"                           
+  default     = "10.1.1.111"
 }
 
 variable "bbweb1_ip" {
   type        = string
   description = "Private IP address of Big Boys web VM"
-  default     = "10.2.1.211"                           
+  default     = "10.2.1.211"
 }
 
 ########################################################
@@ -79,8 +79,8 @@ variable "subnets" {
   type = list(object({
     name        = string
     cidr        = string
-    type        = string                                  # GENERAL | LOCAL | VPC_ENDPOINT
-    vpc_name    = string   
+    type        = string # GENERAL | LOCAL | VPC_ENDPOINT
+    vpc_name    = string
     description = string
   }))
   default = [
@@ -120,41 +120,41 @@ variable "public_ips" {
 # Security Group 변수 정의
 ########################################################
 variable "security_group_bastion" {
-    type        = string
-    default     = "bastionSG"
-  }
+  type    = string
+  default = "bastionSG"
+}
 
 variable "security_group_ceweb" {
-    type        = string
-    default     = "cewebSG"
-  }
+  type    = string
+  default = "cewebSG"
+}
 
 variable "security_group_bbweb" {
-    type        = string
-    default     = "bbwebSG"
-  }
+  type    = string
+  default = "bbwebSG"
+}
 
 ########################################################
 # Virtual Server Standard Image 변수 정의
 ########################################################
 variable "image_windows_os_distro" {
-  type        = string
-  default     = "windows"
+  type    = string
+  default = "windows"
 }
 
 variable "image_windows_scp_os_version" {
-  type        = string
-  default     = "2022 Std."
+  type    = string
+  default = "2022 Std."
 }
 
 variable "image_rocky_os_distro" {
-  type        = string
-  default     = "rocky"
+  type    = string
+  default = "rocky"
 }
 
 variable "image_rocky_scp_os_version" {
-  type        = string
-  default     = "9.4"
+  type    = string
+  default = "9.4"
 }
 
 ########################################################
@@ -162,38 +162,38 @@ variable "image_rocky_scp_os_version" {
 ########################################################
 variable "server_type_id" {
   type    = string
-  default = "s1v1m2"
+  default = "s2v1m2"
 }
 
 variable "vm_bastion" {
   type = object({
-    name = string
+    name        = string
     description = string
   })
   default = {
-    name = "bastionvm110w"
+    name        = "bastionvm110w"
     description = "Bastion VM for Cross VPC Access"
   }
 }
 
 variable "vm_ceweb1" {
   type = object({
-    name = string
+    name        = string
     description = string
   })
   default = {
-    name = "cewebvm111r"
+    name        = "cewebvm111r"
     description = "Creative Energy Web VM1"
   }
 }
 
 variable "vm_bbweb1" {
   type = object({
-    name = string
+    name        = string
     description = string
   })
   default = {
-    name = "bbwebvm211r"
+    name        = "bbwebvm211r"
     description = "Big Boys Web VM1"
   }
 }
@@ -222,16 +222,4 @@ variable "boot_volume_rocky" {
     type                  = "SSD"
     delete_on_termination = true
   }
-}
-
-variable "windows_image_id" {
-  type        = string
-  description = "[TERRAFORM_INFRA] Windows Server image ID"
-  default     = "28d98f66-44ca-4858-904f-636d4f674a62"
-}
-
-variable "rocky_image_id" {
-  type        = string
-  description = "[TERRAFORM_INFRA] Rocky Linux image ID"
-  default     = "253a91ea-1221-49d7-af53-a45c389e7e1a"
 }

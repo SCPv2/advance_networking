@@ -16,13 +16,13 @@ variable "common_tags" {
 variable "keypair_name" {
   type        = string
   description = "Key Pair to access VM"
-  default     = "mykey"                                 # 기존 Key Pair 이름으로 변경
+  default     = "mykey" # 기존 Key Pair 이름으로 변경
 }
 
 variable "user_public_ip" {
   type        = string
   description = "Public IP address of user PC"
-  default     = "x.x.x.x"                               # 수강자 PC의 Public IP 주소 입력
+  default     = "x.x.x.x" # 수강자 PC의 Public IP 주소 입력
 }
 
 ########################################################
@@ -31,19 +31,19 @@ variable "user_public_ip" {
 variable "primary_ip" {
   type        = string
   description = "Private IP address of Primary VM"
-  default     = "10.1.1.110"                           
+  default     = "10.1.1.110"
 }
 
 variable "secondary_ip" {
   type        = string
   description = "Private IP address of Secondary VM"
-  default     = "10.2.1.211"                           
+  default     = "10.2.1.211"
 }
 
 variable "tertiary_ip" {
   type        = string
   description = "Private IP address of Tertiary VM"
-  default     = "10.3.1.31"                           
+  default     = "10.3.1.31"
 }
 
 ########################################################
@@ -83,8 +83,8 @@ variable "subnets" {
   type = list(object({
     name        = string
     cidr        = string
-    type        = string                                  # GENERAL | LOCAL | VPC_ENDPOINT
-    vpc_name    = string   
+    type        = string # GENERAL | LOCAL | VPC_ENDPOINT
+    vpc_name    = string
     description = string
   }))
   default = [
@@ -132,41 +132,41 @@ variable "public_ips" {
 # Security Group 변수 정의
 ########################################################
 variable "security_group_primary" {
-    type        = string
-    default     = "primarySG"
-  }
+  type    = string
+  default = "primarySG"
+}
 
 variable "security_group_secondary" {
-    type        = string
-    default     = "secondarySG"
-  }
+  type    = string
+  default = "secondarySG"
+}
 
 variable "security_group_tertiary" {
-    type        = string
-    default     = "tertiarySG"
-  }
+  type    = string
+  default = "tertiarySG"
+}
 
 ########################################################
 # Virtual Server Standard Image 변수 정의
 ########################################################
 variable "image_windows_os_distro" {
-  type        = string
-  default     = "windows"
+  type    = string
+  default = "windows"
 }
 
 variable "image_windows_scp_os_version" {
-  type        = string
-  default     = "2022 Std."
+  type    = string
+  default = "2022 Std."
 }
 
 variable "image_rocky_os_distro" {
-  type        = string
-  default     = "rocky"
+  type    = string
+  default = "rocky"
 }
 
 variable "image_rocky_scp_os_version" {
-  type        = string
-  default     = "9.4"
+  type    = string
+  default = "9.4"
 }
 
 ########################################################
@@ -175,38 +175,38 @@ variable "image_rocky_scp_os_version" {
 
 variable "server_type_id" {
   type    = string
-  default = "s1v1m2"
+  default = "s2v1m2"
 }
 
 variable "vm_primary" {
   type = object({
-    name = string
+    name        = string
     description = string
   })
   default = {
-    name = "vm110w"
+    name        = "vm110w"
     description = "Primary VM"
   }
 }
 
 variable "vm_secondary" {
   type = object({
-    name = string
+    name        = string
     description = string
   })
   default = {
-    name = "vm211r"
+    name        = "vm211r"
     description = "Secondary VM"
   }
 }
 
 variable "vm_tertiary" {
   type = object({
-    name = string
+    name        = string
     description = string
   })
   default = {
-    name = "vm311r"
+    name        = "vm311r"
     description = "Tertiary VM"
   }
 }
