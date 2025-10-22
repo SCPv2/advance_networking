@@ -4,6 +4,6 @@
 
 ### IPsec VPN 구현 [/vpn](./vpn)
 
-### VPC Peering과 Transit Gateway 구현 [/vpc_peering_transit_gateway](./vpc_peering_transit_gateway)
+### VPC Peering과 Transit Gateway 구성 [/vpc_peering_transit_gateway](./vpc_peering_transit_gateway)
 
 ### 다중 VPC 간 Load Balancing 구성 [/load_balancing](./load_balancing)
