@@ -2,6 +2,7 @@
 
 ## 선행 실습
 
+<<<<<<< HEAD:load_balancing/README.md
 ### 선택 '[과정 소개](https://github.com/SCPv2/advance_introduction/blob/main/README.md)'
 
 - Key Pair, 인증키, DNS 등 사전 준비
@@ -10,7 +11,7 @@
 
 - Samsung Cloud Platform v2 기반 Terraform 학습
 
-## 실습 환경 배포
+## Samsung Cloud Platform 실습 환경 배포
 
 **&#128906; 사용자 변수 입력 (\load_balancing\variables.tf)**
 
