@@ -1,4 +1,4 @@
-# IPsec VPN 연결
+# Samsung Cloud Platform v2 Advance IPsec VPN 구현
 
 ## 선행 실습
 
@@ -193,32 +193,4 @@ df -h             # 마운트 확인
 cd efs
 ls
 sudo touch Thans_for_warm_welcome!
-```
-
-## 자원 삭제
-
-**&#128906; Samsung Cloud Platform 자원 삭제**
-
-- VPN Tunnel삭제
-- VPN Gateway 삭제
-- 새로 작성한 Firewall 규칙 삭제
-
-|Deployment|Firewall|Source|Destination|Service|Action|Direction|Description|
-|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
-|User Add|IGW|10.1.1.110|192.168.200.0/24|TCP 22|Allow|Outbound|SSH outbound to ec2 instance|
-|User Add|IGW|10.1.1.111|192.168.200.0/24|TCP 2049|Allow|Outbound|NFS outbound to Amazon EFS|
-
-- 새로 작성한 Public IP 삭제
-
-```bash
-cd C:\scpv2advance\advance_networking\vpn\scp_deployment
-terraform destroy --auto-approve
-```
-
-**&#128906; AWS 자원 삭제**
-
-```bash
-cd C:\scpv2advance\advance_networking\vpn\aws_deployment
-terraform destroy --auto-approve
-
 ```

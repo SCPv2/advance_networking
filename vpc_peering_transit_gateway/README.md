@@ -10,7 +10,7 @@
 
 - Samsung Cloud Platform v2기반 Terraform 학습
 
-## 실습 환경 배포
+## Samsung Cloud Platform 실습 환경 배포
 
 **&#128906; 사용자 변수 입력 (\vpc_peering_transit_gateway\variables.tf)**
 
