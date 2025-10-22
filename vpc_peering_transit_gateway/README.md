@@ -1,4 +1,4 @@
-# VPC Peering과 Transit Gateway 구현
+# VPC Peering과 Transit Gateway 구성
 
 ## 선행 실습
 
