@@ -1,1 +1,2 @@
-# Samsung Cloud Platform v2 Advance VPC 네트워크 설계 및 구현
+# VPC 네트워크 설계 및 구현
+
