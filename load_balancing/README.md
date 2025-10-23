@@ -2,7 +2,7 @@
 
 ## Samsung Cloud Platform 실습 환경 배포
 
-**&#128906; 사용자 변수 입력 (\load_balancing\variables.tf)**
+**&#128906; 사용자 변수 입력** (\advance_networking\load_balancing\variables.tf)
 
 ```hcl
 variable "user_public_ip" {
@@ -12,10 +12,9 @@ variable "user_public_ip" {
 }
 ```
 
-**&#128906; Terraform 자원 배포 템플릿 실행**
+**&#128906; Terraform 자원 배포 템플릿 실행** (\advance_networking\load_balancing)
 
 ```bash
-cd C:\scpv2advance\advance_networking\load_balancing\
 terraform init
 terraform validate
 terraform plan
@@ -26,6 +25,7 @@ terraform apply --auto-approve
 ## 환경 검토
 
 - Architectuer Diagram
+
 - VPC CIDR
 - Subnet CIDR
 - Virtual Server OS, Public IP, Private IP
@@ -65,17 +65,18 @@ terraform apply --auto-approve
 ## Public Domian Name 확인
 
 - Public Domain Name: '[과정소개](https://github.com/SCPv2/advance_introduction)'에서 등록한 도메인명
+
 - Hosted Zone       : '[과정소개](https://github.com/SCPv2/advance_introduction)'에서 등록한 도메인명
 - www               : A 레코드, 바로 앞에서 만든 Public IP, 300
 
 ## VPC1과 VPC2에 VPC Peering 생성
 
-- VPC Peering명 : cepeering12  
+- VPC Peering명 : `cepeering12`  
 - 요청 VPC      : VPC1  
 - 승인 VPC      : VPC2  
 - 규칙          :  
-{출발지       : 요청 VPC, 목적지        : 10.2.1.0/24}  
-{출발지       : 승인 VPC, 목적지        : 10.1.1.0/24}
+{출발지       : 요청 VPC, 목적지        : `10.2.1.0/24`}  
+{출발지       : 승인 VPC, 목적지        : `10.1.1.0/24`}
 
 ## 서버에 애플리케이션 배포
 
@@ -105,11 +106,11 @@ sudo bash bbweb_install_web_server.sh
 
 ## ceweb Load Balancer 생성
 
-- Load Balancer명: ceweblb
+- Load Balancer명: `ceweblb`
 - 서비스 구분 :  L7
 - VPC : VPC1
 - Service Subnet : Subnet11
-- Sevice IP      : 10.1.1.100
+- Sevice IP      : `10.1.1.100`
 - Public NAT IP  : 사용
 
 - Firewall 사용   : 사용
@@ -117,7 +118,7 @@ sudo bash bbweb_install_web_server.sh
 
 ## ceweb LB 서버 그룹 생성
 
-- LB 서버 그룹명 : ceweblbgrp
+- LB 서버 그룹명 : `ceweblbgrp`
 - VPC           : VPC1
 - Service Subnet : Subnet11
 - 부하 분산 : Round Robin
@@ -129,7 +130,7 @@ sudo bash bbweb_install_web_server.sh
 
 ## bbweb LB 서버 그룹 생성
 
-- LB 서버 그룹명 : bbweblbgrp
+- LB 서버 그룹명 : `bbweblbgrp`
 - VPC           : VPC1
 - Service Subnet : Subnet11
 - 부하 분산 : Round Robin
@@ -141,7 +142,7 @@ sudo bash bbweb_install_web_server.sh
 
 ## ceweb Listener 생성
 
-- Listener명 : celistener
+- Listener명 : `celistener`
 - 프로토콜 : TCP
 - 서비스 포트 : 80
 - LB 서버 그룹 : celbgrp

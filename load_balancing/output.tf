@@ -20,16 +20,16 @@ output "deployment_info" {
 output "vpc_info" {
   value = {
     vpc1 = {
-      name = samsungcloudplatformv2_vpc_vpc.vpcs["VPC1"].name
-      id   = samsungcloudplatformv2_vpc_vpc.vpcs["VPC1"].id
-      cidr = samsungcloudplatformv2_vpc_vpc.vpcs["VPC1"].cidr
-      description = samsungcloudplatformv2_vpc_vpc.vpcs["VPC1"].description
+      name        = samsungcloudplatformv2_vpc_vpc.vpc1.name
+      id          = samsungcloudplatformv2_vpc_vpc.vpc1.id
+      cidr        = samsungcloudplatformv2_vpc_vpc.vpc1.cidr
+      description = samsungcloudplatformv2_vpc_vpc.vpc1.description
     }
     vpc2 = {
-      name = samsungcloudplatformv2_vpc_vpc.vpcs["VPC2"].name
-      id   = samsungcloudplatformv2_vpc_vpc.vpcs["VPC2"].id
-      cidr = samsungcloudplatformv2_vpc_vpc.vpcs["VPC2"].cidr
-      description = samsungcloudplatformv2_vpc_vpc.vpcs["VPC2"].description
+      name        = samsungcloudplatformv2_vpc_vpc.vpc2.name
+      id          = samsungcloudplatformv2_vpc_vpc.vpc2.id
+      cidr        = samsungcloudplatformv2_vpc_vpc.vpc2.cidr
+      description = samsungcloudplatformv2_vpc_vpc.vpc2.description
     }
   }
   description = "VPC information for cross VPC load balancing"
@@ -45,7 +45,7 @@ output "server_info" {
       name       = samsungcloudplatformv2_virtualserver_server.bastion_vm.name
       id         = samsungcloudplatformv2_virtualserver_server.bastion_vm.id
       private_ip = var.bastion_ip
-      public_ip  = samsungcloudplatformv2_vpc_publicip.pips["PIP1"].id
+      public_ip  = samsungcloudplatformv2_vpc_publicip.pip1.id
       vpc        = "VPC1"
       os         = "Windows Server 2022"
     }
@@ -53,7 +53,7 @@ output "server_info" {
       name       = samsungcloudplatformv2_virtualserver_server.ceweb_vm.name
       id         = samsungcloudplatformv2_virtualserver_server.ceweb_vm.id
       private_ip = var.ceweb1_ip
-      public_ip  = samsungcloudplatformv2_vpc_publicip.pips["PIP2"].id
+      public_ip  = samsungcloudplatformv2_vpc_publicip.pip2.id
       vpc        = "VPC1"
       os         = "Rocky Linux 9.4"
       service    = "Creative Energy Web"
@@ -62,7 +62,7 @@ output "server_info" {
       name       = samsungcloudplatformv2_virtualserver_server.bbweb_vm.name
       id         = samsungcloudplatformv2_virtualserver_server.bbweb_vm.id
       private_ip = var.bbweb1_ip
-      public_ip  = samsungcloudplatformv2_vpc_publicip.pips["PIP3"].id
+      public_ip  = samsungcloudplatformv2_vpc_publicip.pip3.id
       vpc        = "VPC2"
       os         = "Rocky Linux 9.4"
       service    = "Big Boys Web"
@@ -79,24 +79,24 @@ output "network_config" {
   value = {
     subnets = {
       vpc1_subnet = {
-        name = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].name
-        id   = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].id
-        cidr = samsungcloudplatformv2_vpc_subnet.subnets["Subnet11"].cidr
+        name = samsungcloudplatformv2_vpc_subnet.subnet11.name
+        id   = samsungcloudplatformv2_vpc_subnet.subnet11.id
+        cidr = samsungcloudplatformv2_vpc_subnet.subnet11.cidr
         vpc  = "VPC1"
       }
       vpc2_subnet = {
-        name = samsungcloudplatformv2_vpc_subnet.subnets["Subnet21"].name
-        id   = samsungcloudplatformv2_vpc_subnet.subnets["Subnet21"].id
-        cidr = samsungcloudplatformv2_vpc_subnet.subnets["Subnet21"].cidr
+        name = samsungcloudplatformv2_vpc_subnet.subnet21.name
+        id   = samsungcloudplatformv2_vpc_subnet.subnet21.id
+        cidr = samsungcloudplatformv2_vpc_subnet.subnet21.cidr
         vpc  = "VPC2"
       }
     }
     internet_gateways = {
       vpc1_igw = {
-        id = samsungcloudplatformv2_vpc_internet_gateway.igw["VPC1"].id
+        id = samsungcloudplatformv2_vpc_internet_gateway.igw1.id
       }
       vpc2_igw = {
-        id = samsungcloudplatformv2_vpc_internet_gateway.igw["VPC2"].id
+        id = samsungcloudplatformv2_vpc_internet_gateway.igw2.id
       }
     }
   }
@@ -127,8 +127,8 @@ output "security_config" {
       }
     }
     firewall_rules = {
-      vpc1_firewall = samsungcloudplatformv2_vpc_internet_gateway.igw["VPC1"].id
-      vpc2_firewall = samsungcloudplatformv2_vpc_internet_gateway.igw["VPC2"].id
+      vpc1_firewall = samsungcloudplatformv2_vpc_internet_gateway.igw1.id
+      vpc2_firewall = samsungcloudplatformv2_vpc_internet_gateway.igw2.id
     }
   }
   description = "Security configuration for cross VPC access control"
@@ -146,13 +146,13 @@ output "manual_installation_guide" {
       bbweb_server = "/home/rocky/z_ready2install_go2web-server"
     }
     installation_commands = {
-      ceweb_server = "cd /home/rocky/ceweb/web-server && sudo bash install_web_server.sh"
+      ceweb_server = "cd /home/rocky/ceweb/web-server && sudo bash ceweb_install_web_server.sh"
       bbweb_server = "cd /home/rocky/ceweb/web-server && sudo bash bbweb_install_web_server.sh"
     }
     ssh_access = {
-      bastion = "RDP to ${samsungcloudplatformv2_vpc_publicip.pips["PIP1"].id}:3389"
-      ceweb_server = "SSH to rocky@${samsungcloudplatformv2_vpc_publicip.pips["PIP2"].id}"
-      bbweb_server = "SSH to rocky@${samsungcloudplatformv2_vpc_publicip.pips["PIP3"].id}"
+      bastion      = "RDP to ${samsungcloudplatformv2_vpc_publicip.pip1.id}:3389"
+      ceweb_server = "SSH to rocky@${samsungcloudplatformv2_vpc_publicip.pip2.id}"
+      bbweb_server = "SSH to rocky@${samsungcloudplatformv2_vpc_publicip.pip3.id}"
     }
   }
   description = "Manual installation guide for web servers"
@@ -179,7 +179,7 @@ output "next_steps" {
     step3 = {
       title = "Install Web Servers"
       description = "Run installation scripts on both web servers"
-      ce_web_command = "cd /home/rocky/ceweb/web-server && sudo bash install_web_server.sh"
+      ce_web_command = "cd /home/rocky/ceweb/web-server && sudo bash ceweb_install_web_server.sh"
       bb_web_command = "cd /home/rocky/ceweb/web-server && sudo bash bbweb_install_web_server.sh"
     }
     step4 = {
