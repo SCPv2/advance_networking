@@ -4,9 +4,7 @@
 
 **&#128906; 콘솔에서 Public IP 생성**
 
-```bash
-구분 : Internet Gateway
-```
+- 구분 : Internet Gateway
 
 **&#128906; Samsung Cloud Platform 변수 입력 (\scp_deployment\variables.tf)**
 
@@ -20,10 +18,9 @@ variable "user_public_ip" {
 }
 ```
 
-**&#128906; Terraform 자원 배포 템플릿 실행**
+**&#128906; Terraform 자원 배포 템플릿 실행** (\advance_networking\vpn\scp_deployment)
 
 ```bash
-cd C:\scpv2advance\advance_networking\vpn\scp_deployment
 terraform init
 terraform validate
 terraform plan
@@ -51,10 +48,9 @@ resource "aws_customer_gateway" "cgw" {
 }
 ```
 
-**&#128906; Terraform 자원 배포 템플릿 실행**
+**&#128906; Terraform 자원 배포 템플릿 실행** (\advance_networking\vpn\aws_deployment)
 
 ```bash
-cd C:\scpv2advance\advance_networking\vpn\aws_deployment
 terraform init
 terraform validate
 terraform plan
@@ -91,7 +87,7 @@ terraform apply --auto-approve
 
 ### VPN Gateway 생성
 
-- VPN Gateway명                  : cevpn
+- VPN Gateway명                  : `cevpn`
 - 연결 VPC                       : VPC1
 - Public IP                     : 앞에서 생성한 Public IP 지정
 
@@ -99,10 +95,10 @@ terraform apply --auto-approve
 
 **서비스 정보**  
 
-- VPN Tunnel명                  : ceawsvpntunnel
+- VPN Tunnel명                  : `ceawsvpntunnel`
 - VPN Gateway명                 : cevpn
 - Peer VPN GW IP                : AWS 구성 정보 참고
-- Remote Subnet(CIDR)           : 192.168.200.0/24
+- Remote Subnet(CIDR)           : `192.168.200.0/24`
 - Pre-shared Key                : AWS 구성 정보 참고  
 
 **IKE 설정**  
@@ -155,9 +151,9 @@ terraform apply --auto-approve
 - 로컬 PC에서 Bastion Host로 다음 파일을 복사
 
 ```bash
-C:\scpv2advance\mykey.ppk 
-C:\scpv2advance\advance_networking\vpn\aws_deployment\awsmykey.pem 
-C:\scpv2advance\advance_networking\vpn\scp_deployment\install_putty.ps1
+mykey.ppk 
+\advance_networking\vpn\aws_deployment\awsmykey.pem 
+\advance_networking\vpn\scp_deployment\install_putty.ps1
 ```
 
 - Bastion Host(10.1.1.110)에서 NFSVM(10.1.1.111)에 SSH(22) 접속
