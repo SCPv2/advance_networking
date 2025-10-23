@@ -133,15 +133,15 @@ terraform apply --auto-approve
 
 |Deployment|Security Group|Direction|Target Address   Remote SG|Service|Description|
 |:-----:|:-----:|:-----:|:-----:|:-----:|:-----|
-|Terrafom|bastionSG|Inbound|Your Public IP|TCP 3389|RDP inbound to bastion VM|
-|Terrafom|bastionSG|Outbound|0.0.0.0/0|TCP 80|HTTP outbound to Internet|
-|Terrafom|bastionSG|Outbound|0.0.0.0/0|TCP 443|HTTPS outbound to Internet|
-|Terrafom|bastionSG|Outbound|nfsvmSG|TCP 22|SSH outbound to nfs vm |
+|Terraform|bastionSG|Inbound|Your Public IP|TCP 3389|RDP inbound to bastion VM|
+|Terraform|bastionSG|Outbound|0.0.0.0/0|TCP 80|HTTP outbound to Internet|
+|Terraform|bastionSG|Outbound|0.0.0.0/0|TCP 443|HTTPS outbound to Internet|
+|Terraform|bastionSG|Outbound|nfsvmSG|TCP 22|SSH outbound to nfs vm |
 |User Add|bastionSG|Outbound|192.168.200.0/24|TCP 22|SSH outbound to ec2 instance |
 |||||||
-|Terrafom|nfsvmSG|Outbound|0.0.0.0/0|TCP 80|HTTP outbound to Internet|
-|Terrafom|nfsvmSG|Outbound|0.0.0.0/0|TCP 443|HTTPS outbound to Internet|
-|Terrafom|nfsvmSG|Inbound|bastionSG|TCP 22|SSH inbound from bastion|
+|Terraform|nfsvmSG|Outbound|0.0.0.0/0|TCP 80|HTTP outbound to Internet|
+|Terraform|nfsvmSG|Outbound|0.0.0.0/0|TCP 443|HTTPS outbound to Internet|
+|Terraform|nfsvmSG|Inbound|bastionSG|TCP 22|SSH inbound from bastion|
 |User Add|nfsvmSG|Outbound|192.168.200.0/24|TCP 2049|NFS connection outbound to Amazon EFS|
 
 ## VM 연결 및 NFS 마운트
