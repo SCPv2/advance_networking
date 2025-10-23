@@ -6,7 +6,7 @@
 
 - 구분 : Internet Gateway
 
-**&#128906; Samsung Cloud Platform 변수 입력 (\scp_deployment\variables.tf)**
+**&#128906; Samsung Cloud Platform 변수 입력** (\advance_networking\vpn\scp_deployment\variables.tf)
 
 ```hcl
 variable "user_public_ip" {
@@ -30,7 +30,7 @@ terraform apply --auto-approve
 
 ## AWS 실습 환경 배포
 
-**&#128906; AWS 변수 입력 (\aws_deployment\main.tf)**
+**&#128906; AWS 변수 입력** (\advance_networking\vpn\aws_deployment\main.tf)
 
 ```hcl
 provider "aws" {
@@ -149,12 +149,9 @@ terraform apply --auto-approve
 ### Bastion Server 접속
 
 - 로컬 PC에서 Bastion Host로 다음 파일을 복사
-
-```bash
-mykey.ppk 
-\advance_networking\vpn\aws_deployment\awsmykey.pem 
-\advance_networking\vpn\scp_deployment\install_putty.ps1
-```
+  - mykey.ppk
+  - \advance_networking\vpn\aws_deployment\awsmykey.pem
+  - \advance_networking\vpn\scp_deployment\install_putty.ps1
 
 - Bastion Host(10.1.1.110)에서 NFSVM(10.1.1.111)에 SSH(22) 접속
 - Bastion Host(10.1.1.110)에서 ec2(192.168.200.X)에 SSH(22) 접속
