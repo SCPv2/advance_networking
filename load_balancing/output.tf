@@ -8,7 +8,7 @@ output "deployment_info" {
     architecture = "Multi-VPC Web Servers"
     deployment_time = timestamp()
     terraform_version = ">=1.11"
-    provider_version = "1.0.3"
+    provider_version = "2.0.3"
   }
   description = "Basic deployment information"
 }
