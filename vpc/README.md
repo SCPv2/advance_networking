@@ -72,7 +72,7 @@
   - 동작 : Allow
   - 방향 : Inbound
 
--Security Group(SG1)
+- Security Group(SG1)
   - Security Group명 : `SG1`
   - 로그 저장 여부 : 사용하지 않음
       - (규칙1)
@@ -84,7 +84,7 @@
       - 유형 : SSH(22)
       - 원격 : Security Group : SG2
     
--Security Group(SG2)
+- Security Group(SG2)
   - Security Group명 : `SG1`
   - 로그 저장 여부 : 사용하지 않음
       - (규칙1)
@@ -97,6 +97,7 @@
 **&#128906; Samsung Cloud Platform**
 
 (vm110w)
+
 - Image 및 버전 선택 : Windows
 - 서버명 : `vm110w`
 - VPC : VPC1
@@ -106,6 +107,7 @@
 - Keypair : mykey
 
 (vm111r)
+
 - Image 및 버전 선택 : Rocky
 - 서버명 : `vm111r`
 - VPC : VPC1
@@ -116,6 +118,7 @@
 **&#128906; 타 클라우드**
 
 (vm110w)
+
 - Image 및 버전 선택 : Windows
 - 서버명 : `vm110w`
 - VPC : VPC1
@@ -127,6 +130,7 @@
 - Keypair : mykey
 
 (vm111r)
+
 - Image 및 버전 선택 : Amazon Linux
 - 서버명 : `vm111r`
 - VPC : VPC1
@@ -146,10 +150,12 @@
 - NAT Gateway IP : Public IP
 
 (추가 Security Group 규칙: SG2)
+
 Outbound, 0.0.0.0/0, TCP 80
 Outbound, 0.0.0.0/0, TCP 443
 
 (추가 Firewall 규칙: Internet Gateway)
+
 Outbound, (출발지)10.1.2.0/24, (목적지)0.0.0.0/0, TCP 80
 Outbound, (출발지)10.1.2.0/24, (목적지)0.0.0.0/0, TCP 443
 
@@ -159,8 +165,10 @@ Outbound, (출발지)10.1.2.0/24, (목적지)0.0.0.0/0, TCP 443
 - 연결 유형 : 퍼블릭
 - 탄력적 IP 할당 ID : 탄력적 IP 할당
 
-(추가 라우팅 테이블 : Subnet12)
+(추가 라우팅 테이블 : Subnet12)  
+
 0.0.0.0/0 , Outbound, NAT-
+
 
 
 
