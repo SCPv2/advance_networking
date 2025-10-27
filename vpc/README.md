@@ -137,6 +137,30 @@
   - SSH(22), Inbound , SG1
 - Keypair : mykey
 
+## NAT Gateway 
+
+**&#128906; Samsung Cloud Platform**
+
+- VPC : VPC1
+- Subnet명 : Subnet12
+- NAT Gateway IP : Public IP
+
+(추가 Security Group 규칙: SG2)
+Outbound, 0.0.0.0/0, TCP 80
+Outbound, 0.0.0.0/0, TCP 443
+
+(추가 Firewall 규칙: Internet Gateway)
+Outbound, (출발지)10.1.2.0/24, (목적지)0.0.0.0/0, TCP 80
+Outbound, (출발지)10.1.2.0/24, (목적지)0.0.0.0/0, TCP 443
+
+**&#128906; 타 클라우드**
+
+- Subnet : Subnet11
+- 연결 유형 : 퍼블릭
+- 탄력적 IP 할당 ID : 탄력적 IP 할당
+
+(추가 라우팅 테이블 : Subnet12)
+0.0.0.0/0 , Outbound, NAT-
 
 
 
